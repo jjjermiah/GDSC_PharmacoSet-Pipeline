@@ -1,0 +1,6 @@
+rawdata/*
+procdata/*
+metadata/*
+results/*
+.snakemake/*
+sandbox

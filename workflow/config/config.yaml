@@ -1,0 +1,21 @@
+metadata:
+  sampleAnnotation: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/Cell_Lines_Details.xlsx"
+  treatmentAnnotation: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/screened_compounds_rel_8.5.csv"
+  cellmodelpassportsAnnootation: "https://cog.sanger.ac.uk/cmp/download/model_list_20230923.csv"
+  cellmodelpassportsGeneAnnotation: "https://cog.sanger.ac.uk/cmp/download/gene_identifiers_20191101.csv"
+
+rawdata:
+  expression:
+    file: "https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/" 
+    metadata: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
+  mutation:
+    WGS_VCF: "https://cog.sanger.ac.uk/cmp/download/mutations_wgs_vcf_20221123.zip"
+    WES_VCF: "https://cog.sanger.ac.uk/cmp/download/mutations_wes_vcf_20221010.zip"
+    SUMMARY: "https://cog.sanger.ac.uk/cmp/download/mutations_all_20230202.zip"
+  cnv:
+    WGS_CNV: "https://cog.sanger.ac.uk/cmp/download/WGS_purple_CNV_genes_20230303.zip"
+    WES_CNV: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
+  methylation:
+    GSE68379_Matrix_processed: "tbd"
+    GSE68379_Matrix_SignalIntensities: "tbd"
+    GSE68379_Matrix_RAW: "tbd"
