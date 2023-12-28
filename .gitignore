@@ -1,6 +1,9 @@
-rawdata/*
-procdata/*
-metadata/*
-results/*
-.snakemake/*
+rawdata/
+old_rawdata/
+old_metadata/
+procdata/
+metadata/
+results/
+.snakemake/
 sandbox
+cog.sanger.ac.uk/
