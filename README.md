@@ -8,3 +8,13 @@
   - then build the GDSC1 and GDSC2 treatmentResponseExperiment in two new repos
   
 ![pipeline status](resources/dag.svg)
+
+# download source data files
+
+``` bash
+snakemake \
+  --snakefile workflow/Snakefile \
+  --cores 4 \
+  --keep-going \
+  downloadAllData
+```

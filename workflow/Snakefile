@@ -4,9 +4,12 @@ import json
 import pandas as pd
 HTTP = HTTPRemoteProvider()
 
-df = pd.read_csv("https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/E-MTAB-3610.sdrf.txt", sep="\t").set_index('Characteristics[cell line]', drop=False)
 
 configfile: "workflow/config/config.yaml"
+
+
+include: "rules/downloadData.smk"
+
 # input function to get the files from the FTP server and save them locally
 def getExpressionFiles(wildcards):
 
@@ -43,14 +46,6 @@ rule preprocessMETHYLATION:
     script:
         "scripts/preprocessMETHYLATION.R"
 
-rule downloadMETHYLATION:
-    input:
-        file = HTTP.remote("https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources//Data/preprocessed/methylation/METH_CELL_DATA.txt.zip")
-    output:
-        file = "rawdata/methylation/METH_CELL_DATA.txt",
-    shell:
-        "unzip -p {input.file} F2_METH_CELL_DATA.txt > {output.file} && rm {input.file}" # unzip, extract the file and remove the zip file
-
 rule preprocessMUTATION:
     input:
         WGS = directory("rawdata/mutation/WGS_VCF"),
@@ -62,30 +57,6 @@ rule preprocessMUTATION:
         10
     script:
         "scripts/preprocessMUTATION.R"
-
-rule downloadMUTATION_WGSData:
-    input:
-        WGS = HTTP.remote(config['rawdata']['mutation']['WGS_VCF']),
-    output:
-        WGS = directory("rawdata/mutation/WGS_VCF"),
-    shell:
-        "unzip -d {output.WGS} {input.WGS}" # TODO:: work with the zip file in R scripts instead of unzipping it all the time
-
-rule downloadMUTATION_WESData:
-    input:
-        WES = HTTP.remote(config['rawdata']['mutation']['WES_VCF']),
-    output:
-        WES = directory("rawdata/mutation/WES_VCF"),
-    shell:
-        "unzip -d {output.WES} {input.WES}"
-
-rule downloadMUTATION_summary:
-    input:
-        summary = HTTP.remote(config['rawdata']['mutation']['SUMMARY']),
-    output:
-        summary = "rawdata/mutation/mutations_all_20230202.csv",
-    shell:
-        "unzip -d {output.summary} {input.summary}"
 
 rule preprocessCNV:
     input:
@@ -102,25 +73,6 @@ rule preprocessCNV:
     script:
         "scripts/preprocessCNV.R"
 
-rule downloadCNV_WGSData:
-    input:
-        WGS = HTTP.remote(config['rawdata']['cnv']['WGS_CNV']),
-    output:
-        WGS_genes = "rawdata/cnv/WGS_purple_CNV_genes_20230303.csv",
-        WGS_category = "rawdata/cnv/WGS_purple_genes_cn_category_20230303.csv",
-        WGS_total_cnv = "rawdata/cnv/WGS_purple_genes_total_copy_number_20230303.csv",
-    shell:
-        "unzip -d $(dirname {output.WGS_genes}) {input.WGS}; rm {input.WGS}"
-
-rule downloadCNV_WESData:
-    input:
-        WES = HTTP.remote(config['rawdata']['cnv']['WES_CNV'])
-    output:
-        WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
-        WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
-        WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-    shell:
-        "unzip -d $(dirname {output.WES_genes}) {input.WES}; rm {input.WES}"
 
 rule preprocessEXPRESSION:
     input: 
@@ -133,100 +85,4 @@ rule preprocessEXPRESSION:
     script:
         "scripts/preprocessEXPRESSION.R"
 
-# input function to get the files from the FTP server and save them locally
-def getExpressionFiles(wildcards):
-    basepath = "https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/"
-    
-    with open("metadata/expression/E-MTAB-3610_expressionFiles.json") as f:
-        expressionFiles = json.load(f)
-    
-    # get the first 10 keys of the dictionary
-    files = dict(list(expressionFiles.items())[:10])
 
-    # append filename to basepath for each sample and return 
-    ftpFilePaths = [basepath + expressionFiles[sample]['filename'] for sample in files]
-
-    return HTTP.remote(ftpFilePaths)
-
-rule downloadExpressionData:
-    input:
-        expressionFile = getExpressionFiles,
-    output:
-        CELfiles = directory("rawdata/expression/"),
-    shell:
-        # wget into the directory CELfiles
-        "wget -P {output.CELfiles} {input.expressionFile}"
-
-rule downloadMethylationData:
-    input:
-        processed = HTTP.remote('https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.processed.txt.gz'),
-        signalIntensity = HTTP.remote('https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.Signal.Intensities.txt.gz'),
-    output:
-        processed = "rawdata/methylation/GSE68379_Matrix.processed.txt",
-        signalIntensity = "rawdata/methylation/GSE68379_Matrix.Signal.Intensities.txt",
-    shell:
-        "gunzip -c {input.processed} > {output.processed} && gunzip -c {input.signalIntensity} > {output.signalIntensity}"
-
-rule downloadExpressionMetadata:
-    input:
-        srdf = HTTP.remote("https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/E-MTAB-3610.sdrf.txt"),
-        fileList = HTTP.remote("https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/raw-data_filelist.json"),
-    output:
-        SRDF = "metadata/expression/E-MTAB-3610.sdrf.txt",
-        filelist = "metadata/expression/E-MTAB-3610_filelist.json",
-    shell:
-        "wget -O {output.SRDF} {input.srdf} && wget -O {output.filelist} {input.fileList}"
-
-rule loadExpressionMetadata:
-    input:
-        filelist = "metadata/expression/E-MTAB-3610_filelist.json",
-    output:
-        expressionFiles = "metadata/expression/E-MTAB-3610_expressionFiles.json",
-    run:
-        import json
-        with open(input.filelist) as f:
-            filelist = json.load(f)
-        
-        expressionFiles = dict()
-
-        for i, file in enumerate(filelist):
-            samplename = file['attributes'][0]['value']
-            expressionFiles[samplename] = dict()
-
-            expressionFiles[samplename]['filename'] = file['path']
-            expressionFiles[samplename]['size'] = file['size']
-            expressionFiles[samplename]['description'] = file['attributes'][1]['value']
-
-            if i == 0:
-                print(expressionFiles)
-        
-        # save to json file
-        with open(output.expressionFiles, 'w') as f:
-            json.dump(expressionFiles, f, indent=4)
-
-
-rule downloadSampleMetadata:
-    input:
-        sampleMetadata = HTTP.remote(config['metadata']['sampleAnnotation'])
-    output:
-        sampleMetadata = "metadata/sampleAnnotation.csv",
-    shell:
-        "mv {input.sampleMetadata} {output.sampleMetadata}"
-
-rule downloadTreatmentMetadata:
-    input:
-        treatmentMetadata = HTTP.remote(config['metadata']['treatmentAnnotation'])
-    output:
-        treatmentMetadata = "metadata/treatmentAnnotation.csv",
-    shell:
-        "mv {input.treatmentMetadata} {output.treatmentMetadata}"
-
-rule downloadCellModelPassportsMetadata:
-    input:
-        cellModelPassportsMetadata = HTTP.remote(config['metadata']['cellmodelpassportsAnnootation']),
-        cellmodelpassportsGeneAnnotation = HTTP.remote(config['metadata']['cellmodelpassportsGeneAnnotation'])
-    output:
-        cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
-        cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
-    shell:
-        "mv {input.cellModelPassportsMetadata} {output.cellModelPassportsMetadata} && mv {input.cellmodelpassportsGeneAnnotation} {output.cellmodelpassportsGeneAnnotation}"

@@ -9,6 +9,7 @@ rawdata:
   expression:
     file: "https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/" 
     metadata: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
+    
 
   mutation:
     WGS_VCF: "https://cog.sanger.ac.uk/cmp/download/mutations_wgs_vcf_20221123.zip"
@@ -20,6 +21,6 @@ rawdata:
     WES_CNV: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
 
   methylation:
-    GSE68379_Matrix_processed: "tbd"
-    GSE68379_Matrix_SignalIntensities: "tbd"
-    GSE68379_Matrix_RAW: "tbd"
+    processed: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.processed.txt.gz'
+    signalIntensity: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.Signal.Intensities.txt.gz'
+    meth_cell_data: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Data/preprocessed/methylation/METH_CELL_DATA.txt.zip"
