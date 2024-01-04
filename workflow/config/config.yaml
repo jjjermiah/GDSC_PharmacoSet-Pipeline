@@ -8,7 +8,9 @@ rawdata:
 
   expression:
     file: "https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/" 
-    metadata: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
+    metadata_tsv: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
+    metadata_srdf: "https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/E-MTAB-3610.sdrf.txt"
+    metadata_json: "https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/raw-data_filelist.json"
     
 
   mutation:

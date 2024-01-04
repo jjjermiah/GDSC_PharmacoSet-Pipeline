@@ -15,6 +15,7 @@ rule downloadAllData:
         "rawdata/methylation/METH_CELL_DATA.txt",
         "metadata/expression/E-MTAB-3610.sdrf.txt",
         "metadata/expression/E-MTAB-3610_filelist.json",
+        "metadata/expression/E-MTAB-3610.tsv"
 
 
 
@@ -140,10 +141,17 @@ rule downloadExpressionData:
 
 rule downloadExpressionMetadata:
     input:
-        srdf = HTTP.remote("https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/E-MTAB-3610.sdrf.txt"),
-        fileList = HTTP.remote("https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/raw-data_filelist.json"),
+        srdf = HTTP.remote(config['rawdata']['expression']['metadata_srdf']),
+        fileList = HTTP.remote(config['rawdata']['expression']['metadata_json']),
+        tsv = HTTP.remote(config['rawdata']['expression']['metadata_tsv'])
     output:
-        SRDF = "metadata/expression/E-MTAB-3610.sdrf.txt",
+        srdf = "metadata/expression/E-MTAB-3610.sdrf.txt",
         filelist = "metadata/expression/E-MTAB-3610_filelist.json",
+        tsv = "metadata/expression/E-MTAB-3610.tsv",
     shell:
-        "wget -O {output.SRDF} {input.srdf} && wget -O {output.filelist} {input.fileList}"
+        # "wget -O {output.SRDF} {input.srdf} && wget -O {output.filelist} {input.fileList}"
+        """
+        wget -O {output.srdf} {input.srdf} && \
+        wget -O {output.filelist} {input.fileList} && \
+        wget -O {output.tsv} {input.tsv}
+        """
