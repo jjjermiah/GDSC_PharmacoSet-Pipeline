@@ -1,9 +1,12 @@
-rawdata/
+rawdata/*
 old_rawdata/
 old_metadata/
 procdata/
 metadata/
 results/
 .snakemake/
+logs/
 sandbox
 cog.sanger.ac.uk/
+.RData
+.RDataTmp

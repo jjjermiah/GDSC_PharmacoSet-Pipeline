@@ -3,7 +3,7 @@ rule downloadSampleMetadata:
     input:
         sampleMetadata = HTTP.remote(config['metadata']['sampleAnnotation'])
     output:
-        sampleMetadata = "metadata/sampleAnnotation.csv",
+        sampleMetadata = "metadata/sampleAnnotation.xlsx",
     shell:
         "mv {input.sampleMetadata} {output.sampleMetadata}"
 

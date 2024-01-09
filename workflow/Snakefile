@@ -9,21 +9,7 @@ configfile: "workflow/config/config.yaml"
 
 
 include: "rules/downloadData.smk"
-
-# input function to get the files from the FTP server and save them locally
-def getExpressionFiles(wildcards):
-
-    basepath = "https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/"
-     
-        # load the json file with the expression files
-    with open("metadata/expression/E-MTAB-3610_expressionFiles.json") as f:
-        expressionFiles = json.load(f)
-    # get the first 10 keys of the dictionary
-    files = dict(list(expressionFiles.items())[:10])
-    # append filename to basepath for each sample and return 
-    ftpFilePaths = [basepath + expressionFiles[sample]['filename'] for sample in files]
-
-    return HTTP.remote(ftpFilePaths)
+include: "rules/processMetadata.smk"
 
 rule all:
     input:
@@ -35,6 +21,8 @@ rule all:
         sampleMetadata = "metadata/sampleAnnotation.csv",
         cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
         cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
+
+
 
 rule preprocessMETHYLATION:
     input:
@@ -74,15 +62,5 @@ rule preprocessCNV:
         "scripts/preprocessCNV.R"
 
 
-rule preprocessEXPRESSION:
-    input: 
-        CELfiles = directory("rawdata/expression/"),
-        CEL_metadata = "/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/metadata/expression/E-MTAB-3610.sdrf.txt",
-    output:
-        preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessEXPRESSION.R"
 
 
