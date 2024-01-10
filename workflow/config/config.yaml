@@ -4,6 +4,11 @@ metadata:
   cellmodelpassportsAnnootation: "https://cog.sanger.ac.uk/cmp/download/model_list_20230923.csv"
   cellmodelpassportsGeneAnnotation: "https://cog.sanger.ac.uk/cmp/download/gene_identifiers_20191101.csv"
 
+referenceGenome:
+  description: TODO::(add description)
+  url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
+
+
 molecularProfiles:
 
   microarray:
@@ -43,8 +48,11 @@ molecularProfiles:
       description: "Caveman and Pindel processed VCFs with cancer driver annotation."
       url: "https://cog.sanger.ac.uk/cmp/download/mutations_wes_vcf_20221010.zip"
     SUMMARY: 
-      description: TODO::(add description)
-      url: "A list of all mutations present in all sequenced models."
+      description: "A list of all mutations present in all sequenced models."
+      url: "https://cog.sanger.ac.uk/cmp/download/mutations_all_20230202.zip"
+    Genes_Metadata:
+      description: "The cancer driver gene list used by the Cell Model Passports"
+      url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
   cnv:
     WGS_CNV: 

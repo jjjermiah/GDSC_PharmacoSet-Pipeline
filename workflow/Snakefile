@@ -10,57 +10,36 @@ configfile: "workflow/config/config.yaml"
 
 include: "rules/downloadData.smk"
 include: "rules/processMetadata.smk"
+include: "rules/process_microarray.smk"
+include: "rules/process_rnaseq.smk"
+include: "rules/process_mutation.smk"
 
 rule all:
     input:
-        preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-        preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-        preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
-        treatmentMetadata = "metadata/treatmentAnnotation.csv",
-        sampleMetadata = "metadata/sampleAnnotation.csv",
-        cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
-        cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
+        metadata = "procdata/metadata.qs",
+        preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
+        mutation_SE = "procdata/mutation/mutation_SE.qs",
+        preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
+        # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
+        # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
+        # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
+        # preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
+        # treatmentMetadata = "metadata/treatmentAnnotation.csv",
+        # sampleMetadata = "metadata/sampleAnnotation.csv",
+        # cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
+        # cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
 
 
 
-rule preprocessMETHYLATION:
-    input:
-        methylationData = "rawdata/methylation/METH_CELL_DATA.txt",
-    output:
-        preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessMETHYLATION.R"
-
-rule preprocessMUTATION:
-    input:
-        WGS = directory("rawdata/mutation/WGS_VCF"),
-        WES = directory("rawdata/mutation/WES_VCF"),
-        summary = "rawdata/mutation/mutations_all_20230202.csv",
-    output:
-        preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessMUTATION.R"
-
-rule preprocessCNV:
-    input:
-        WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
-        WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
-        WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-        WGS_genes = "rawdata/cnv/WGS_purple_CNV_genes_20230303.csv",
-        WGS_category = "rawdata/cnv/WGS_purple_genes_cn_category_20230303.csv",
-        WGS_total_cnv = "rawdata/cnv/WGS_purple_genes_total_copy_number_20230303.csv",
-    output:
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessCNV.R"
-
+# rule preprocessMETHYLATION:
+#     input:
+#         methylationData = "rawdata/methylation/METH_CELL_DATA.txt",
+#     output:
+#         preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
+#     threads:
+#         10
+#     script:
+#         "scripts/preprocessMETHYLATION.R"
 
 
 
