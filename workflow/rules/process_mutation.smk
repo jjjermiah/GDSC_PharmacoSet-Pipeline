@@ -58,6 +58,3 @@ rule preprocessCNV:
         "../scripts/preprocessCNV.R"
 
 
-rule make_CNV_SE:
-    input
-

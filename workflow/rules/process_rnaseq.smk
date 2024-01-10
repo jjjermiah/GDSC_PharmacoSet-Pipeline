@@ -25,9 +25,7 @@ rule download_RNASEQ:
 rule preprocess_RNASEQ:
     input:
         all = "rawdata/rnaseq/rnaseq_all_20220624.zip",
-        sampleMetadata = "metadata/sampleAnnotation.xlsx",
-        cmp_Metadata = "metadata/cellModelPassportsAnnotation.csv",
-        cmp_GeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
+        metadata = "procdata/metadata.qs"
     output:
         preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
     script:
