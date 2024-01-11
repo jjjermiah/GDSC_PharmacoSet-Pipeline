@@ -19,7 +19,7 @@ rule all:
         metadata = "procdata/metadata.qs",
         preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
         mutation_SE = "procdata/mutation/mutation_SE.qs",
-        preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
+        preprocessed_RNASEQ = "procdata/rnaseq/preprocessed_rnaseq.qs",
         # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
         # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
         # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
