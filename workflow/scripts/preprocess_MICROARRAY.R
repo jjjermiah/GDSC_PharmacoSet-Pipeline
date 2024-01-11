@@ -1,11 +1,22 @@
+# 
+# AUTHOR: Jermiah Joseph
+# CREATED: 01-08-2024
+# DESCRIPTION:
+#   This script takes in a directory of .cel files and a sample annotation file
+#   and performs RMA normalization on the .cel files. The normalized expression
+#   matrix is then collapsed by gene symbol and the sample annotations are
+#   merged with the expression matrix. The gene annotations are also merged with
+#   the expression matrix. The final output is a list of 3 items:
+#       1. expr_annot: a data.table containing the gene annotations
+#       2. sample_annotations: a data.table containing the sample annotations
+#       3. expr: a data.table containing the normalized expression matrix
+
+
 # FILEPATH: /home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/scripts/processExpressionData.R
 # PACKAGE DEPENDENCIES:
 #  - affy
 #  - readr
 
-# Set the directory paths for the raw data and metadata
-rawdata_Dir <- "/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/rawdata"
-metadata_Dir <- "/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/metadata"
 
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
@@ -16,22 +27,24 @@ if(exists("snakemake")){
     THREADS <- snakemake@threads
     save.image()
 }
-
+# exit
 celDirectory <- INPUT$CELfiles
 sample_annotations <- INPUT$CEL_metadata
 
 # ----------------------------- EXPRESSION DATA ----------------------------- ##
 # Get a list of all the .cel files in the rawdata expression directory
-fileList <- list.files(celDirectory, pattern = ".cel", full.names = TRUE)
+# Read in the .cel files using the affy package and perform RMA normalization
+# Extract the expression matrix from the normalized data
+# Remove the ".cel" extension from the column names of the expression matrix
 
-eSet <- affy::rma(affy::read.affybatch(fileList))   # Read in the .cel files using the affy package and perform RMA normalization
-mtx <- affy::exprs(eSet)                            # Extract the expression matrix from the normalized data
+# fileList <- list.files(celDirectory, pattern = ".cel", full.names = TRUE)
+message("Reading in the .cel files and performing RMA normalization")
+affyFiles <- affy::read.affybatch(celDirectory)
+eSet <- affy::rma(affyFiles)
+mtx <- affy::exprs(eSet)                            
+colnames(mtx) <- sub(pattern = ".cel", "", colnames(mtx), fixed = TRUE) 
 
-colnames(mtx) <- sub(pattern = ".cel", "",          # Remove the ".cel" extension from the column names of the expression matrix
-                    colnames(mtx), fixed = TRUE) 
-
-
-## ----------------------------- SAMPLE ANNOTATIONS ----------------------------- ##
+## --------------------------- SAMPLE ANNOTATIONS --------------------------- ##
 # NOTE: These sample annotations are specific to the affymetrix data
 # The rawdata files use Assay IDs specific to this technology and have provided annotations 
 # to map these IDs back to the sample name 
@@ -50,13 +63,13 @@ all.equal(colnames(mtx), sample_annotations$`Assay Name`)
 
 ## ----------------------------- GENE ANNOTATIONS ----------------------------- ##
 library(hgu219.db)
-k <- keys(hgu219.db,keytype="PROBEID")
+k <- keys(hgu219.db, keytype="PROBEID")
 
 columns <- c("SYMBOL", "GENENAME", "ENSEMBL", "ENTREZID", "UNIPROT", "PMID") 
 
 annotations <- BiocParallel::bplapply(columns, function(col){
-        data <- data.table::as.data.table(select(hgu219.db, keys=k, columns=c(col), keytype="PROBEID"))
-        # remove rows with dupllicate "PROBEID" values
+        data <- data.table::as.data.table(
+            select(hgu219.db, keys=k, columns=c(col), keytype="PROBEID"))
         data <- data[!duplicated(data$PROBEID), ]
         data
     },
@@ -64,7 +77,8 @@ annotations <- BiocParallel::bplapply(columns, function(col){
 )
 
 # merge all data.tables on "PROBEID"
-gene_annotations <- Reduce(function(x, y) merge(x, y, by = "PROBEID", all = TRUE), annotations)
+gene_annotations <- Reduce(
+    function(x, y) merge(x, y, by = "PROBEID", all = TRUE), annotations)
 
 # # Get common gene names
 common_genes <- intersect(rownames(mtx), gene_annotations$PROBEID)
@@ -96,5 +110,5 @@ names(outputList) <- c("expr_annot", "sample_annotations", "expr")
 
 
 # make output directory if it doesnt exist
-dir.create(dirname(OUTPUT[['preprocessedEXPRESSION']]), recursive = TRUE, showWarnings = FALSE)
-qs::qsave(outputList, OUTPUT[['preprocessedEXPRESSION']], nthreads = THREADS)
+dir.create(dirname(OUTPUT[[1]]), recursive = TRUE, showWarnings = FALSE)
+qs::qsave(outputList, OUTPUT[[1]], nthreads = THREADS)

@@ -15,16 +15,12 @@ if(exists("snakemake")){
     save.image()
 }
 
-inputFilesNames <- names(INPUT)[names(INPUT) != ""]
+library(data.table)
+inputFilesNames <- names(INPUT)[names(INPUT) != "" & names(INPUT) != "metadata"]
 
-GDSC_sampleMetadataAnnotation <- "/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/metadata/Cell_Lines_Details.xlsx"
-GDSC_sampleMetadataAnnotation <- data.table::as.data.table(readxl::read_xlsx(path=GDSC_sampleMetadataAnnotation, sheet=1), check.names = TRUE) 
-
-cell_model_annotations <- data.table::fread("/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/metadata/model_list_20230923.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
-cell_model_annotations <- cell_model_annotations[, .(model_id, sample_id, patient_id, parent_id, model_name, tissue, cancer_type)]
-
-
-sampleMetadata <- merge(GDSC_sampleMetadataAnnotation, cell_model_annotations, by.x = "Sample Name", by.y = "model_name", all.x = TRUE)
+metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
+sampleMetadata <- metadata$sample
+sampleMetadata
 
 ## ------------------- Load Data ------------------- ##
 # Load data
@@ -38,11 +34,14 @@ inputData <- lapply(inputFilesNames, function(file){
         df <- data.table::transpose(df, make.names="V1")
     } else {
         df <- data.table::fread(INPUT[[file]], header = TRUE, sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
-        df
+        return(df)
     }
-    df[model_id %in% sampleMetadata[, model_id]]
 })
 names(inputData) <- inputFilesNames
+
+
+# df[model_id %in% sampleMetadata[, model_id]]
+
 
 # make output directory if it doesnt exist
 dir.create(dirname(OUTPUT$preprocessedCNV), recursive = TRUE, showWarnings = FALSE)

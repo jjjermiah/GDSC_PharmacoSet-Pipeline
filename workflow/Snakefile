@@ -9,80 +9,34 @@ configfile: "workflow/config/config.yaml"
 
 
 include: "rules/downloadData.smk"
+include: "rules/processMetadata.smk"
+include: "rules/process_microarray.smk"
+include: "rules/process_rnaseq.smk"
+include: "rules/process_mutation.smk"
+include: "rules/process_cnv.smk"
+include: "rules/process_fusion.smk"
 
-# input function to get the files from the FTP server and save them locally
-def getExpressionFiles(wildcards):
-
-    basepath = "https://ftp.ebi.ac.uk/biostudies/nfs/E-MTAB-/610/E-MTAB-3610/Files/"
-     
-        # load the json file with the expression files
-    with open("metadata/expression/E-MTAB-3610_expressionFiles.json") as f:
-        expressionFiles = json.load(f)
-    # get the first 10 keys of the dictionary
-    files = dict(list(expressionFiles.items())[:10])
-    # append filename to basepath for each sample and return 
-    ftpFilePaths = [basepath + expressionFiles[sample]['filename'] for sample in files]
-
-    return HTTP.remote(ftpFilePaths)
-
-rule all:
+rule build_PharmacoSet:
     input:
-        preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-        preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-        preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
-        treatmentMetadata = "metadata/treatmentAnnotation.csv",
-        sampleMetadata = "metadata/sampleAnnotation.csv",
-        cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
-        cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
+        metadata = "procdata/metadata.qs",
+        preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
+        mutation_SE = "procdata/mutation/mutation_SE.qs",
+        rnaseq_SE = "procdata/rnaseq/rnaseq_SE.qs",
+        CNV_SE = "procdata/cnv/CNV_SE.qs",
+        fusion_SE = "procdata/fusion/fusion_se.qs",
+        # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
+        # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
+        # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
 
-rule preprocessMETHYLATION:
-    input:
-        methylationData = "rawdata/methylation/METH_CELL_DATA.txt",
-    output:
-        preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessMETHYLATION.R"
+# rule preprocessMETHYLATION:
+#     input:
+#         methylationData = "rawdata/methylation/METH_CELL_DATA.txt",
+#     output:
+#         preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
+#     threads:
+#         10
+#     script:
+#         "scripts/preprocessMETHYLATION.R"
 
-rule preprocessMUTATION:
-    input:
-        WGS = directory("rawdata/mutation/WGS_VCF"),
-        WES = directory("rawdata/mutation/WES_VCF"),
-        summary = "rawdata/mutation/mutations_all_20230202.csv",
-    output:
-        preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessMUTATION.R"
-
-rule preprocessCNV:
-    input:
-        WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
-        WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
-        WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-        WGS_genes = "rawdata/cnv/WGS_purple_CNV_genes_20230303.csv",
-        WGS_category = "rawdata/cnv/WGS_purple_genes_cn_category_20230303.csv",
-        WGS_total_cnv = "rawdata/cnv/WGS_purple_genes_total_copy_number_20230303.csv",
-    output:
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessCNV.R"
-
-
-rule preprocessEXPRESSION:
-    input: 
-        CELfiles = directory("rawdata/expression/"),
-        CEL_metadata = "/home/bioinf/bhklab/jermiah/psets/pset-pipelines/GDSC/metadata/expression/E-MTAB-3610.sdrf.txt",
-    output:
-        preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
-    threads:
-        10
-    script:
-        "scripts/preprocessEXPRESSION.R"
 
 

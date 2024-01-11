@@ -4,23 +4,76 @@ metadata:
   cellmodelpassportsAnnootation: "https://cog.sanger.ac.uk/cmp/download/model_list_20230923.csv"
   cellmodelpassportsGeneAnnotation: "https://cog.sanger.ac.uk/cmp/download/gene_identifiers_20191101.csv"
 
-rawdata:
+referenceGenome:
+  description: TODO::(add description)
+  url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
 
-  expression:
-    file: "https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/" 
-    metadata: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
-    
+
+molecularProfiles:
+
+  microarray:
+    description: "Data taken from https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/." 
+    metadata_tsv: 
+      description: TODO::(add description)
+      url: "https://www.ebi.ac.uk/biostudies/files/E-MTAB-3610/E-MTAB-3610.tsv"
+    metadata_srdf: 
+      description: TODO::(add description)
+      url: "https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/E-MTAB-3610.sdrf.txt"
+    metadata_json: 
+      description: TODO::(add description)
+      url: "https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/raw-data_filelist.json"
+  
+  rnaseq:
+    rawdata: 
+      description: "Data available from EGA under accession EGAD00001001357. 466 samples. 
+        Access to raw cram files requires DAC approval. "
+      url: "https://ega-archive.org/datasets/EGAD00001001357"
+    processed:
+      all:
+        description: "Read counts, TPM & FPKM-values for all sequenced models 
+          including cell lines and organoids."
+        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
+      sanger:
+        description: "Sanger cell line data processed using the iRAP pipeline."
+        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_sanger_20210316.zip"
+      broad:
+        description: "Broad cell line data processed using the iRAP pipeline."
+        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_broad_20210317.zip"
 
   mutation:
-    WGS_VCF: "https://cog.sanger.ac.uk/cmp/download/mutations_wgs_vcf_20221123.zip"
-    WES_VCF: "https://cog.sanger.ac.uk/cmp/download/mutations_wes_vcf_20221010.zip"
-    SUMMARY: "https://cog.sanger.ac.uk/cmp/download/mutations_all_20230202.zip"
+    WGS_VCF: 
+      description: "Caveman and Pindel processed VCFs with cancer driver annotation."
+      url: "https://cog.sanger.ac.uk/cmp/download/mutations_wgs_vcf_20221123.zip"
+    WES_VCF: 
+      description: "Caveman and Pindel processed VCFs with cancer driver annotation."
+      url: "https://cog.sanger.ac.uk/cmp/download/mutations_wes_vcf_20221010.zip"
+    SUMMARY: 
+      description: "A list of all mutations present in all sequenced models."
+      url: "https://cog.sanger.ac.uk/cmp/download/mutations_all_20230202.zip"
+    Genes_Metadata:
+      description: "The cancer driver gene list used by the Cell Model Passports"
+      url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
   cnv:
-    WGS_CNV: "https://cog.sanger.ac.uk/cmp/download/WGS_purple_CNV_genes_20230303.zip"
-    WES_CNV: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
+    WGS_CNV: 
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/WGS_purple_CNV_genes_20230303.zip"
+    WES_CNV: 
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
 
   methylation:
-    processed: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.processed.txt.gz'
-    signalIntensity: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.Signal.Intensities.txt.gz'
-    meth_cell_data: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Data/preprocessed/methylation/METH_CELL_DATA.txt.zip"
+    processed: 
+      description: TODO::(add description)
+      url: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.processed.txt.gz'
+    signalIntensity: 
+      description: TODO::(add description)
+      url: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.Signal.Intensities.txt.gz'
+    meth_cell_data: 
+      description: TODO::(add description)
+      url: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Data/preprocessed/methylation/METH_CELL_DATA.txt.zip"
+
+  fusion:
+    gene_fusions:
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/Fusions_20230725.zip"
