@@ -23,6 +23,7 @@ rule build_PharmacoSet:
         mutation_SE = "procdata/mutation/mutation_SE.qs",
         rnaseq_SE = "procdata/rnaseq/rnaseq_SE.qs",
         CNV_SE = "procdata/cnv/CNV_SE.qs",
+        fusion_SE = "procdata/fusion/fusion_se.qs",
         # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
         # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
         # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
