@@ -7,20 +7,11 @@
 - treatment data is yet to be downloaded.
   - idea is to build the MAE first as that is the same between GDSC1 and GDSC2
   - then build the GDSC1 and GDSC2 treatmentResponseExperiment in two new repos
-  
+- TODO:: annotate treatments and samples
+
 ``` bash
 snakemake \
   --snakefile workflow/Snakefile \
   --rulegraph | dot -Tsvg > resources/rulegraph.svg
 ```
 ![pipeline status](resources/rulegraph.svg)
-
-# download source data files
-
-``` bash
-snakemake \
-  --snakefile workflow/Snakefile \
-  --cores 4 \
-  --keep-going \
-  downloadAllData
-```

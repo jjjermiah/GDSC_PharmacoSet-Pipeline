@@ -59,7 +59,7 @@ rse_list <- BiocParallel::bplapply(
 
     metadata <- list(
       data_source = snakemake@config$molecularProfiles$rnaseq$processed,
-      file = unique(preproc$rawData[[assayName_]]["file"])
+      filename = unique(preproc$rawData[[assayName_]][["file"]])
     )
 
     rse <- SummarizedExperiment::SummarizedExperiment(
