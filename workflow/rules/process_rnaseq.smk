@@ -10,35 +10,36 @@ HTTP = HTTPRemoteProvider()
 
 rule download_RNASEQ:
     input:
-        all = HTTP.remote(molecularProfiles['rnaseq']['processed']['all']['url']),
-        sanger = HTTP.remote(molecularProfiles['rnaseq']['processed']['sanger']['url']),
-        broad = HTTP.remote(molecularProfiles['rnaseq']['processed']['broad']['url'])
+        all = HTTP.remote(molecularProfiles['rnaseq']['processed']['all']['url'])
     output:
         all = "rawdata/rnaseq/rnaseq_all_20220624.zip",
-        sanger = "rawdata/rnaseq/rnaseq_sanger_20210316.zip",
-        broad = "rawdata/rnaseq/rnaseq_broad_20210317.zip"
     shell:
         """
-        mv {input.all} {output.all} && \
-        mv {input.sanger} {output.sanger} && \
-        mv {input.broad} {output.broad}
+        mv {input.all} {output.all} 
         """
 
 rule preprocess_RNASEQ:
     input:
-        all = "rawdata/rnaseq/rnaseq_all_20220624.zip",
+        all = rules.download_RNASEQ.output.all,
         metadata = "procdata/metadata.qs"
     output:
         preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
+    log:
+        "logs/rnaseq/preprocess_RNASEQ.log"
+    threads:
+        3
     script:
-        "../scripts/process_RNASEQ.R"
-
+        "../scripts/rnaseq/process_RNASEQ.R"
 
 rule make_RNASEQ_SE:
     input:
-        preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
+        preprocessed = rules.preprocess_RNASEQ.output.preprocessed,
         metadata = "procdata/metadata.qs"
     output:
         rnaseq_se = "procdata/rnaseq/rnaseq_SE.qs"
+    log:     
+        "logs/rnaseq/make_RNASEQ_SE.log"
+    threads:
+        3
     script:
-        "../scripts/make_RNASEQ_SE.R"
+        "../scripts/rnaseq/make_RNASEQ_SE.R"

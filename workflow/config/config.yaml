@@ -33,12 +33,6 @@ molecularProfiles:
         description: "Read counts, TPM & FPKM-values for all sequenced models 
           including cell lines and organoids."
         url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
-      sanger:
-        description: "Sanger cell line data processed using the iRAP pipeline."
-        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_sanger_20210316.zip"
-      broad:
-        description: "Broad cell line data processed using the iRAP pipeline."
-        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_broad_20210317.zip"
 
   mutation:
     WGS_VCF: 
