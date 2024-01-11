@@ -49,20 +49,4 @@ rule make_MUTATION_SE:
     script:
         "../scripts/makeMUTATION_SE.R"
 
-rule preprocessCNV:
-    input:
-        WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
-        WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
-        WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-        WGS_genes = "rawdata/cnv/WGS_purple_CNV_genes_20230303.csv",
-        WGS_category = "rawdata/cnv/WGS_purple_genes_cn_category_20230303.csv",
-        WGS_total_cnv = "rawdata/cnv/WGS_purple_genes_total_copy_number_20230303.csv",
-        metadata = "procdata/metadata.qs",
-    output:
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-    threads:
-        10
-    script:
-        "../scripts/preprocessCNV.R"
-
 

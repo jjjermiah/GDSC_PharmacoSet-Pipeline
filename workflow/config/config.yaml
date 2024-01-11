@@ -72,3 +72,8 @@ molecularProfiles:
     meth_cell_data: 
       description: TODO::(add description)
       url: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Data/preprocessed/methylation/METH_CELL_DATA.txt.zip"
+
+  fusion:
+    gene_fusions:
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/Fusions_20230725.zip"

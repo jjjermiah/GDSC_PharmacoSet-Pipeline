@@ -7,7 +7,13 @@
   - idea is to build the MAE first as that is the same between GDSC1 and GDSC2
   - then build the GDSC1 and GDSC2 treatmentResponseExperiment in two new repos
   
-![pipeline status](resources/dag.svg)
+``` bash
+
+snakemake \
+  --snakefile workflow/Snakefile \
+  --rulegraph | dot -Tsvg > resources/rulegraph.svg
+```
+![pipeline status](resources/rulegraph.svg)
 
 # download source data files
 

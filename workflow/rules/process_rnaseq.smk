@@ -4,7 +4,9 @@ HTTP = HTTPRemoteProvider()
 ################################################################################
 ## RNA-SEQ
 # 
-#' note: all, sanger, and broad are included here but only all will be used
+# note: all, sanger, and broad are included here but only 'all' will be used
+# This is because the other two are subsets of the 'all' dataset and does not 
+# include as much data
 
 rule download_RNASEQ:
     input:
@@ -30,3 +32,13 @@ rule preprocess_RNASEQ:
         preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
     script:
         "../scripts/process_RNASEQ.R"
+
+
+rule make_RNASEQ_SE:
+    input:
+        preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
+        metadata = "procdata/metadata.qs"
+    output:
+        rnaseq_se = "procdata/rnaseq/rnaseq_SE.qs"
+    script:
+        "../scripts/make_RNASEQ_SE.R"

@@ -13,23 +13,19 @@ include: "rules/processMetadata.smk"
 include: "rules/process_microarray.smk"
 include: "rules/process_rnaseq.smk"
 include: "rules/process_mutation.smk"
+include: "rules/process_cnv.smk"
+include: "rules/process_fusion.smk"
 
-rule all:
+rule build_PharmacoSet:
     input:
         metadata = "procdata/metadata.qs",
         preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
         mutation_SE = "procdata/mutation/mutation_SE.qs",
-        preprocessed_RNASEQ = "procdata/rnaseq/preprocessed_rnaseq.qs",
+        rnaseq_SE = "procdata/rnaseq/rnaseq_SE.qs",
+        CNV_SE = "procdata/cnv/CNV_SE.qs",
         # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
         # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
         # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-        # preprocessedMUTATION = "procdata/mutation/preprocessedMUTATION.qs",
-        # treatmentMetadata = "metadata/treatmentAnnotation.csv",
-        # sampleMetadata = "metadata/sampleAnnotation.csv",
-        # cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
-        # cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
-
-
 
 # rule preprocessMETHYLATION:
 #     input:
