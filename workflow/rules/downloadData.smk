@@ -3,7 +3,7 @@ import json
 import pandas as pd
 HTTP = HTTPRemoteProvider()
 
-molecularProfiles = config['molecularProfiles']
+
 
 
 

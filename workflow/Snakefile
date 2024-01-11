@@ -6,8 +6,9 @@ HTTP = HTTPRemoteProvider()
 
 
 configfile: "workflow/config/config.yaml"
+molecularProfiles = config['molecularProfiles']
 
-include: "rules/downloadData.smk"
+
 include: "rules/process_metadata.smk"
 include: "rules/process_microarray.smk"
 include: "rules/process_rnaseq.smk"
