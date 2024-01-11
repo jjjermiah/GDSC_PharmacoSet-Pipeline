@@ -1,28 +1,4 @@
 
-# rule downloadMUTATION_WGSData:
-#     input:
-#         WGS = HTTP.remote(molecularProfiles['mutation']['WGS_VCF']['url']),
-#     output:
-#         WGS = directory("rawdata/mutation/WGS_VCF"),
-#     shell:
-#         "unzip -d {output.WGS} {input.WGS}" 
-# TODO:: work with the zip file in R scripts instead of unzipping it all the time
-
-# rule downloadMUTATION_WESData:
-#     input:
-#         WES = HTTP.remote(molecularProfiles['mutation']['WES_VCF']['url']),
-#     output:
-#         WES = directory("rawdata/mutation/WES_VCF"),
-#     shell:
-#         "unzip -d {output.WES} {input.WES}"
-
-# rule downloadMUTATION_summary:
-#     input:
-#         summary = HTTP.remote(molecularProfiles['mutation']['SUMMARY']),
-#     output:
-#         summary = "rawdata/mutation/mutations_all_20230202.zip",
-#     shell:
-#         "unzip -d {output.summary} {input.summary}"
 
 # rule downloadCNV_WGSData:
 #     input:
