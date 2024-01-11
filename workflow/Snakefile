@@ -7,7 +7,6 @@ HTTP = HTTPRemoteProvider()
 
 configfile: "workflow/config/config.yaml"
 
-
 include: "rules/downloadData.smk"
 include: "rules/processMetadata.smk"
 include: "rules/process_microarray.smk"
@@ -24,9 +23,7 @@ rule build_PharmacoSet:
         rnaseq_SE = "procdata/rnaseq/rnaseq_SE.qs",
         CNV_SE = "procdata/cnv/CNV_SE.qs",
         fusion_SE = "procdata/fusion/fusion_se.qs",
-        # preprocessedEXPRESSION = "procdata/expression/preprocessedEXPRESSION.qs",
-        # preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
-        # preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
+
 
 # rule preprocessMETHYLATION:
 #     input:
