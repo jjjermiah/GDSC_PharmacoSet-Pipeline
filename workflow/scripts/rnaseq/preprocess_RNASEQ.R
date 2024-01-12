@@ -1,3 +1,4 @@
+# RULE: preprocess_RNASEQ
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
@@ -6,7 +7,7 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    # save.image()
+    save.image()
 }
 
 library(data.table)
@@ -32,6 +33,7 @@ geneAnnot <- metadata$GRanges
 # -----------------------
 allDir <- paste0(dirname(INPUT$all), "/all")
 dir.create(allDir, recursive = TRUE, showWarnings = FALSE)
+info(paste0("Unzipping ", INPUT$all, " into ", allDir))
 unzip(INPUT$all, exdir = allDir)
 
 # list.files(allDir)
@@ -42,11 +44,10 @@ unzip(INPUT$all, exdir = allDir)
 parsedNames <- lapply(list.files(allDir), 
     function(x) gsub("^rnaseq_|_\\d{8}\\.csv", "", x)
 )
-
 # for each csv in allDir, read in the csv into a data.table and add source col
-rnaseq_data <- lapply(list.files(allDir), function(file){
+rnaseq_data <- lapply(file.path(allDir, list.files(allDir)), function(file){
     info(paste0("Reading in ", file))
-    data <- data.table::fread(file.path(allDir, file), header = TRUE, sep = ",")
+    data <- data.table::fread(file, header = TRUE, sep = ",", showProgress = F)
     data$file <- file
     data
 })
@@ -63,6 +64,7 @@ assays <- BiocParallel::bplapply(
     dataset_types, 
     function(x){ 
         info(sprintf("Subsetting %s", x))
+
         datatype_dt <- 
             rnaseq_data[[x]][
                 -(1:4),
@@ -72,12 +74,15 @@ assays <- BiocParallel::bplapply(
 
         info(sprintf(
             "Subsetting %s for only genes in GDSC gene annotation", x))
-        datatype_dt <- datatype_dt[gene_id %in% geneAnnot$CMP_gene_id,]
+        datatype_dt <- merge(
+            datatype_dt[gene_id %in% geneAnnot$CMP_gene_id,],
+            data.table::as.data.table(geneAnnot)[,.(symbol, CMP_gene_id)],
+            by.x = "gene_id", by.y = "CMP_gene_id", all.x = TRUE)
 
         info(sprintf("Converting %s to matrix", x))
         mtx <- as.matrix(
-            datatype_dt[, !c("gene_id"), with = FALSE],
-            rownames = datatype_dt[["gene_id"]]
+            datatype_dt[, !c("gene_id", "symbol"), with = FALSE],
+            rownames = datatype_dt[["symbol"]]
         )
         info(sprintf(
             "Matrix %s has %d rows and %d columns", x, nrow(mtx), ncol(mtx)))

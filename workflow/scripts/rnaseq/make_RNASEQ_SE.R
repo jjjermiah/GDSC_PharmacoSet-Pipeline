@@ -25,9 +25,6 @@ info("Starting make_RNASEQ_SE.R\n")
 
 # 0.2 read in data
 # ----------------
-info(paste0("Reading in: ", INPUT$metadata))
-metadata <- qs::qread(INPUT$metadata)
-
 info(paste0("Reading in: ", INPUT$preprocessed))
 preproc <- qs::qread(INPUT$preprocessed, nthreads = THREADS)    
 
@@ -49,19 +46,26 @@ assayNames_ <- names(assays_)
 rse_list <- lapply(
   assayNames_, 
   function(assayName_){
-    info(paste0("Creating SummarizedExperiment for ", assayName_))
+    
     assay <- assays_[[assayName_]]
-    sampleids <- colnames(assay)
+    # remove duplicated rownames 
+    assay <- assay[!duplicated(rownames(assay)),]
 
+    sampleids <- colnames(assay)
+    geneids <- rownames(assay)
+    info(paste("Creating colData for", assayName_))
     colData <- data.frame(
       sampleid = sampleids,
       batchid = rep(NA, length(sampleids))
     )
 
-    rowRanges <- rowRanges_[rowRanges_$CMP_gene_id %in% rownames(assay),]
+    info(paste("Creating rowRanges for", assayName_))
+    rowRanges <- rowRanges_[rowRanges_$symbol %in% geneids,][!duplicated(rowRanges_$symbol),]
+
     assays <- list(assay)
     names(assays) <- paste0("rnaseq.", assayName_)
 
+    info(paste0("Creating SummarizedExperiment for ", assayName_))
     rse <- SummarizedExperiment::SummarizedExperiment(
       assays = assays,
       rowRanges = rowRanges,

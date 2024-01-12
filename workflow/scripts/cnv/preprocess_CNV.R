@@ -96,18 +96,11 @@ wes_gene_dt <- genes_dt$WES_genes
 
 setnames(wes_gene_dt, "model_name", "sampleid")
 
-# The goal is to break the data into 3 data.tables:
-# 1 for the all the assays 
-# 2 for the gene annotations
-# 3 for the sample annotations
-
-# 1.1 Build the assay data.table
 # ------------------------------
 info(paste("\n",capture.output(wes_gene_dt[, .N, by = source])))
 #    source        N
 # 1: Sanger 16884273
 # 2:  Broad  1843646
-
 
 cols <- c(
     "sampleid", "symbol",
@@ -115,27 +108,26 @@ cols <- c(
     "seg_mean", "gene_mean", "num_snps", "gatk_mean_log2_copy_ratio", "source")
 dt <- wes_gene_dt[, ..cols, with = FALSE]
 
-
 # subset assay_dt to only include rows with source == "Broad" 
 source_ <- "Sanger"
 assay_dt <- dt[source == source_, !c("source"), with = FALSE]
 
-
 # for each column that isnt sampleid or symbol, create a matrix with genes rows
 # and samples as columns and set the rownames to the gene_id
+# the `dcast` function to reshape the data from 
+# long to wide format, with genes as rows and samples as columns.
+# The resulting data frame `assay_dt.t` contains the `col` values 
+# for each gene-sample combination.
+# If the `col` values are of type character, the function `first` 
+# is used to aggregate the values, otherwise the mean is calculated.
 assayNames <- cols[!cols %in% c("sampleid", "symbol", "source")]
 matrices <- BiocParallel::bplapply(
     assayNames,
     function(col){
-        # the `dcast` function to reshape the data from 
-        # long to wide format, with genes as rows and samples as columns.
-        # The resulting data frame `assay_dt.t` contains the `col` values 
-        # for each gene-sample combination.
-        # If the `col` values are of type character, the function `first` 
-        # is used to aggregate the values, otherwise the mean is calculated.
+        
         info(paste("Casting ", col))
         assay_dt.t <- dcast(
-            assay_dt[1:100000, c("sampleid", "symbol", col), with = FALSE],
+            assay_dt[, c("sampleid", "symbol", col), with = FALSE],
             symbol ~ sampleid,
             value.var = col,
             fun.aggregate = if(is.character(assay_dt[[col]])) dplyr::first else mean

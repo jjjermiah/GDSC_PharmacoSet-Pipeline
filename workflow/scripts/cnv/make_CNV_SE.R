@@ -23,8 +23,7 @@ info("Starting make_CNV_SE.R\n")
 
 # 0.2 Read in the input files
 # ---------------------------
-info(paste("Loading", INPUT$metadata, " "))
-metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
+
 sample <- metadata$sample
 geneAnnot <- metadata$GRanges
 
