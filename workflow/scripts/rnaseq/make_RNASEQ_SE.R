@@ -13,22 +13,23 @@ library(data.table, quietly = TRUE)
 library(GenomicRanges, quietly = TRUE)
 # set up logging
 logger <- log4r::logger(
-    appenders = list(
-        log4r::file_appender(LOGFILE, append = TRUE)
-    )
-)
+    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+
+# make a function to easily log messages to the logger
+info <- function(msg) log4r::info(logger, msg)
+
 
 # 0.1 read in data
 # ----------------
-log4r::info(logger, paste0("Reading in: ", INPUT$metadata))
+info(paste0("Reading in: ", INPUT$metadata))
 metadata <- qs::qread(INPUT$metadata)
 
-log4r::info(logger, paste0("Reading in: ", INPUT$preprocessed))
+info(paste0("Reading in: ", INPUT$preprocessed))
 preproc <- qs::qread(INPUT$preprocessed, nthreads = THREADS)    
 
 # 0.2 read in rnaseq data
 # -----------------------
-log4r::info(logger, 
+info(
   paste0("Parsing rnaseq data from: ", paste(names(preproc), collapse = ", ")))
 
 assays_ <- preproc$assays
@@ -44,7 +45,7 @@ assayNames_ <- names(assays_)
 rse_list <- BiocParallel::bplapply(
   assayNames_, 
   function(assayName_){
-    log4r::info(logger, paste0("Creating SummarizedExperiment for ", assayName_))
+    info(paste0("Creating SummarizedExperiment for ", assayName_))
     assay <- assays_[[assayName_]]
     sampleids <- unique(colnames(assay))
 
@@ -69,8 +70,8 @@ rse_list <- BiocParallel::bplapply(
       metadata = metadata
     )
     rse_show <- capture.output(rse)
-    log4r::info(logger, paste0(" SummarizedExperiment for: ", names(assays)))
-    log4r::info(logger, paste0("\n\t", rse_show))
+    info(paste0(" SummarizedExperiment for: ", assayName_))
+    info(paste0("\n\t", rse_show))
   },
   BPPARAM = BiocParallel::MulticoreParam(workers = THREADS)
 )
@@ -78,6 +79,6 @@ names(rse_list) <- paste0("rnaseq.", assayNames_)
 
 # 2. Save output files
 # --------------------
-log4r::info(logger, paste0("Saving output files to ", OUTPUT$rnaseq_se))
+info(paste0("Saving output files to ", OUTPUT$rnaseq_se))
 dir.create(dirname(OUTPUT$rnaseq_se), recursive=T, showWarnings = FALSE)
 qs::qsave(rse_list, file = OUTPUT$rnaseq_se, nthreads = THREADS)
