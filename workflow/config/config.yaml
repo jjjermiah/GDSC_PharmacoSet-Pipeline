@@ -49,9 +49,6 @@ molecularProfiles:
       url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
   cnv:
-    WGS_CNV: 
-      description: TODO::(add description)
-      url: "https://cog.sanger.ac.uk/cmp/download/WGS_purple_CNV_genes_20230303.zip"
     WES_CNV: 
       description: TODO::(add description)
       url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
