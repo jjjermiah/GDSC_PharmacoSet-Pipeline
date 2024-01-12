@@ -27,7 +27,7 @@ rule downloadCellModelPassportsMetadata:
     shell:
         "mv {input.cellModelPassportsMetadata} {output.cellModelPassportsMetadata} && mv {input.cellmodelpassportsGeneAnnotation} {output.cellmodelpassportsGeneAnnotation}"
 
-rule preprocessMetadata:
+rule preprocess_METADATA:
     input:
         sampleMetadata = "metadata/sampleAnnotation.xlsx",
         treatmentMetadata = "metadata/treatmentAnnotation.csv",

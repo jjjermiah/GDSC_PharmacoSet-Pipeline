@@ -1,12 +1,5 @@
-from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
-HTTP = HTTPRemoteProvider()
-
 ################################################################################
 ## RNA-SEQ
-# 
-# note: all, sanger, and broad are included here but only 'all' will be used
-# This is because the other two are subsets of the 'all' dataset and does not 
-# include as much data
 
 rule download_RNASEQ:
     input:
@@ -21,7 +14,7 @@ rule download_RNASEQ:
 rule preprocess_RNASEQ:
     input:
         all = rules.download_RNASEQ.output.all,
-        metadata = "procdata/metadata.qs"
+        metadata = rules.preprocess_METADATA.output.metadata
     output:
         preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
     log:
@@ -34,7 +27,6 @@ rule preprocess_RNASEQ:
 rule make_RNASEQ_SE:
     input:
         preprocessed = rules.preprocess_RNASEQ.output.preprocessed,
-        metadata = "procdata/metadata.qs"
     output:
         rnaseq_se = "procdata/rnaseq/rnaseq_SE.qs"
     log:     
