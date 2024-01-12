@@ -1,5 +1,4 @@
 
-
 # rule downloadCNV_WGSData:
 #     input:
 #         WGS = HTTP.remote(molecularProfiles['cnv']['WGS_CNV']['url']),
@@ -20,19 +19,18 @@
 #     shell:
 #         "unzip -d $(dirname {output.WES_genes}) {input.WES}; rm {input.WES}"
 
-
-
 rule preprocessCNV:
     input:
         WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
         WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
         WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-        WGS_genes = "rawdata/cnv/WGS_purple_CNV_genes_20230303.csv",
-        WGS_category = "rawdata/cnv/WGS_purple_genes_cn_category_20230303.csv",
-        WGS_total_cnv = "rawdata/cnv/WGS_purple_genes_total_copy_number_20230303.csv",
         metadata = "procdata/metadata.qs",
     output:
         preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
+    log:
+        "logs/cnv/preprocessCNV.log",
+    threads:
+        4
     script:
         "../scripts/cnv/preprocessCNV.R"
 
