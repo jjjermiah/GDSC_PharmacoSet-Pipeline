@@ -1,10 +1,29 @@
+# AUTHOR: Jermiah Joseph
+# CREATED: 01-08-2024
+# DESCRIPTION:
+#  This script reads in the raw CNV data and subsets it to only include samples
+#  and genes in the GDSC sample and gene annotations. The output is a list of
+#  data.tables, one for each input file.
+# 
+# PACKAGE DEPENDENCIES:
+#  - data.table
+#  - log4r
+#  - BiocParallel
+#  - qs
+#
+# NOTES:
+# 1. Categorisation of Total Copy Number values
+# source(https://depmap.sanger.ac.uk/documentation/datasets/copy-number/)
+    # The total copy number values have been categorised (CNA Call) 
+    # using the following calculation:
 
-# WES_genes
-# WES_category
-# WES_total_cnv
-# WGS_genes
-# WGS_category
-# WGS_total_cnv
+    # Val = round( 2 * 2^log2(C/Ploidy) )
+
+    # if Val == 0: Category = 'Deletion'
+    # if Val == 1: Category = 'Loss'
+    # if Val == 2: Category = 'Neutral'
+    # if Val == 3: Category = 'Gain'
+    # if Val >= 4: Category = 'Amplification'
 
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
@@ -12,120 +31,140 @@ if(exists("snakemake")){
     OUTPUT <- snakemake@output
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
+    LOGFILE <- snakemake@log[[1]]
     save.image()
 }
 
 library(data.table)
-inputFilesNames <- names(INPUT)[names(INPUT) != "" & names(INPUT) != "metadata"]
 
+# 0.1 Setup Logger
+# ----------------
+# create a logger from the LOGFILE path in append mode
+logger <- log4r::logger(
+    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+
+# make a function to easily log messages to the logger
+info <- function(msg) log4r::info(logger, msg)
+info("Starting preprocessCNV.R\n")
+
+# 0.2 Read in the input files
+# ---------------------------
 metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
 sampleMetadata <- metadata$sample
-sampleMetadata
+geneAnnot <- metadata$GRanges
 
-## ------------------- Load Data ------------------- ##
-# Load data
-inputData <- lapply(inputFilesNames, function(file){
-    message("Loading ", file, "...")
-    if (grepl("category", file)) {
-        df <- data.table::fread(INPUT[[file]], header = FALSE, sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
-        df <- data.table::transpose(df, make.names="V1")
-    } else if (grepl("total_cnv", file)){ 
-        df <- data.table::fread(INPUT[[file]], header = FALSE, sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
-        df <- data.table::transpose(df, make.names="V1")
-    } else {
-        df <- data.table::fread(INPUT[[file]], header = TRUE, sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
-        return(df)
-    }
+inputFilesNames <- names(INPUT)[names(INPUT) != "" & names(INPUT) != "metadata"]
+
+# 0.3 Read in the raw CNV data
+# -----------------------
+# Read in large file "WES_pureCN_CNV_genes_20221213.csv" :
+# script was written to handle both WES and WGS, only to find out that WGS 
+# does not contain data for any samples in GDSC sample metadata
+# rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv
+
+gene_files <- inputFilesNames[grepl("genes", inputFilesNames)]
+genes_dt <- lapply(gene_files, function(file){
+    info(paste("Loading", file, INPUT[[file]], " "))
+    df <- data.table::fread(
+        INPUT[[file]], header = TRUE, showProgress = FALSE,
+        sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
+    
+    info(sprintf("Loaded %s with %d rows and %d columns", file, nrow(df), ncol(df)))
+
+    info(sprintf("Subsetting %s to only samples in GDSC sample metadata", file))
+    df <- df[model_id %in% sampleMetadata[, model_id]]
+
+    info(sprintf("Subsetting %s to only genes in GDSC gene annotation", file))
+    # drop the symbol column 
+    df <- merge(
+        df[gene_id %in% geneAnnot$CMP_gene_id, !c("symbol"), with = FALSE], 
+        data.table::as.data.table(geneAnnot)[,.(symbol, CMP_gene_id)], 
+        by.x = "gene_id", by.y = "CMP_gene_id", all.x = TRUE)
+
+    info(sprintf("data.table now has %d rows and %d columns", nrow(df), ncol(df)))
+    info(sprintf("Total number of model_ids: %d", uniqueN(df[, model_id])))
+    info(sprintf("Total number of gene_ids: %d", uniqueN(df[, gene_id])))
+
+    return(df)
 })
-names(inputData) <- inputFilesNames
+names(genes_dt) <- gene_files
 
 
-# df[model_id %in% sampleMetadata[, model_id]]
+# 1. Build data structures for each datatype:
+# -------------------------------------------
+wes_gene_dt <- genes_dt$WES_genes
 
+setnames(wes_gene_dt, "model_name", "sampleid")
+
+# The goal is to break the data into 3 data.tables:
+# 1 for the all the assays 
+# 2 for the gene annotations
+# 3 for the sample annotations
+
+# 1.1 Build the assay data.table
+# ------------------------------
+info(paste("\n",capture.output(wes_gene_dt[, .N, by = source])))
+#    source        N
+# 1: Sanger 16884273
+# 2:  Broad  1843646
+
+
+cols <- c(
+    "sampleid", "symbol",
+    "total_copy_number", "cn_category", 
+    "seg_mean", "gene_mean", "num_snps", "gatk_mean_log2_copy_ratio", "source")
+dt <- wes_gene_dt[, ..cols, with = FALSE]
+
+
+# subset assay_dt to only include rows with source == "Broad" 
+source_ <- "Sanger"
+assay_dt <- dt[source == source_, !c("source"), with = FALSE]
+
+
+# for each column that isnt sampleid or symbol, create a matrix with genes rows
+# and samples as columns and set the rownames to the gene_id
+assayNames <- cols[!cols %in% c("sampleid", "symbol", "source")]
+matrices <- BiocParallel::bplapply(
+    assayNames,
+    function(col){
+        # the `dcast` function to reshape the data from 
+        # long to wide format, with genes as rows and samples as columns.
+        # The resulting data frame `assay_dt.t` contains the `col` values 
+        # for each gene-sample combination.
+        # If the `col` values are of type character, the function `first` 
+        # is used to aggregate the values, otherwise the mean is calculated.
+        info(paste("Casting ", col))
+        assay_dt.t <- dcast(
+            assay_dt[1:100000, c("sampleid", "symbol", col), with = FALSE],
+            symbol ~ sampleid,
+            value.var = col,
+            fun.aggregate = if(is.character(assay_dt[[col]])) dplyr::first else mean
+        )
+
+        info(paste("Converting ", col, " to matrix"))
+        mtx <- as.matrix(
+            assay_dt.t[, !c("symbol"), with = FALSE],
+            rownames = assay_dt.t[["symbol"]])
+        
+        info(sprintf(
+            "Matrix %s has %d rows and %d columns", col, nrow(mtx), ncol(mtx)))
+        return(mtx)
+    },
+    BPPARAM = BiocParallel::MulticoreParam(
+        workers = THREADS, timeout=3600, progressbar = TRUE)
+)
+names(matrices) <- paste0("Sanger.", assayNames)
+
+# Each matrix should have the same number of rows and columns
+# check that the number of rows and columns are the same for each matrix
+info("Checking that the number of rows and columns are the same for each matrix")
+if(all.equal(lengths(lapply(matrices, nrow)),lengths(lapply(matrices, ncol)))){
+    info("All matrices have the same number of rows and columns")
+} else {
+    log4r::error(logger, "Not all matrices have the same number of rows and columns")
+    stop("preprocessCNV.R: Not all matrices have the same number of rows and columns")
+}
 
 # make output directory if it doesnt exist
 dir.create(dirname(OUTPUT$preprocessedCNV), recursive = TRUE, showWarnings = FALSE)
-
-qs::qsave(inputData, file = OUTPUT$preprocessedCNV, nthreads = THREADS)
-
-# > str(inputData, list.len=10)
-# List of 6
-#  $ WES_genes    :Classes ‘data.table’ and 'data.frame': 24488104 obs. of  24 variables:
-#   ..$ model_name               : chr [1:24488104] "MEC-1" "MEC-1" "MEC-1" "MEC-1" ...
-#   ..$ model_id                 : chr [1:24488104] "SIDM00001" "SIDM00001" "SIDM00001" "SIDM00001" ...
-#   ..$ symbol                   : chr [1:24488104] "DYNLRB2" "DONSON" "DNAJC16" "DGKD" ...
-#   ..$ cancer_driver            : logi [1:24488104] FALSE FALSE FALSE FALSE FALSE FALSE ...
-#   ..$ gene_id                  : chr [1:24488104] "SIDG07193" "SIDG06885" "SIDG06761" "SIDG06497" ...
-#   ..$ chr_name                 : chr [1:24488104] "chr16" "chr21" "chr1" "chr2" ...
-#   ..$ chr_start                : int [1:24488104] 80540800 33575355 15528860 233387980 31465229 63786773 55779687 70312332 99713137 151429771 ...
-#   ..$ chr_end                  : int [1:24488104] 80550835 33588918 15568454 233469737 31473290 63818618 55816817 70366437 99756016 151438521 ...
-#   ..$ total_copy_number        : num [1:24488104] 2 2 2 2 2 ...
-#   ..$ minor_copy_number        : num [1:24488104] 1 1 1 1 1 0 1 1 1 0 ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-#  $ WES_category :Classes ‘data.table’ and 'data.frame': 1357 obs. of  18352 variables:
-#   ..$ model_name            : chr [1:1357] "22RV1" "22RV1" "23132-87" "253J" ...
-#   ..$ model_id              : chr [1:1357] "SIDM00499" "SIDM00499" "SIDM00980" "SIDM01529" ...
-#   ..$ source                : chr [1:1357] "Broad" "Sanger" "Sanger" "Broad" ...
-#   ..$ symbol                : chr [1:1357] "" "" "" "" ...
-#   ..$ A1BG                  : chr [1:1357] "Neutral" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A1CF                  : chr [1:1357] "Neutral" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A2M                   : chr [1:1357] "Loss" "Gain" "Neutral" "Loss" ...
-#   ..$ A2ML1                 : chr [1:1357] "Neutral" "Gain" "Neutral" "Neutral" ...
-#   ..$ A3GALT2               : chr [1:1357] "Neutral" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A4GALT                : chr [1:1357] "Neutral" "Neutral" "Neutral" "Neutral" ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-#  $ WES_total_cnv:Classes ‘data.table’ and 'data.frame': 1357 obs. of  18005 variables:
-#   ..$ model_name            : chr [1:1357] "22RV1" "22RV1" "23132-87" "253J" ...
-#   ..$ model_id              : chr [1:1357] "SIDM00499" "SIDM00499" "SIDM00980" "SIDM01529" ...
-#   ..$ source                : chr [1:1357] "Broad" "Sanger" "Sanger" "Broad" ...
-#   ..$ symbol                : chr [1:1357] "" "" "" "" ...
-#   ..$ A1BG                  : chr [1:1357] "2.0" "2.0" "2.0" "3.0" ...
-#   ..$ A1CF                  : chr [1:1357] "2.0" "2.0" "2.0" "3.0" ...
-#   ..$ A2M                   : chr [1:1357] "0.854019261815157" "3.0" "2.0" "0.921055428175251" ...
-#   ..$ A2ML1                 : chr [1:1357] "2.0" "3.0" "2.0" "2.0" ...
-#   ..$ A3GALT2               : chr [1:1357] "2.0" "2.0" "2.0" "2.0" ...
-#   ..$ A4GALT                : chr [1:1357] "2.0" "2.0" "2.0" "3.0" ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-#  $ WGS_genes    :Classes ‘data.table’ and 'data.frame': 3484240 obs. of  28 variables:
-#   ..$ model_name                     : chr [1:3484240] "HCM-SANG-0266-C20" "HCM-SANG-0266-C20" "HCM-SANG-0266-C20" "HCM-SANG-0266-C20" ...
-#   ..$ model_id                       : chr [1:3484240] "SIDM01266" "SIDM01266" "SIDM01266" "SIDM01266" ...
-#   ..$ symbol                         : chr [1:3484240] "MIR1284" "MIR5094" "DDX11L1" "WASH7P" ...
-#   ..$ cancer_driver                  : logi [1:3484240] FALSE FALSE FALSE FALSE FALSE FALSE ...
-#   ..$ gene_id                        : chr [1:3484240] "SIDG18552" "SIDG19326" "SIDG06207" "SIDG40986" ...
-#   ..$ chr_name                       : chr [1:3484240] "chr3" "chr15" "chr1" "chr1" ...
-#   ..$ chr_start                      : int [1:3484240] 71541970 89850637 11869 14404 17369 29554 30366 34554 69091 187891 ...
-#   ..$ chr_end                        : int [1:3484240] 71542089 89850721 14409 29570 17436 31097 30503 36081 70008 187958 ...
-#   ..$ total_copy_number              : num [1:3484240] 2.98 2 2 2 2 ...
-#   ..$ minor_copy_number              : num [1:3484240] 2.98 2 2 2 2 ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-#  $ WGS_category :Classes ‘data.table’ and 'data.frame': 145 obs. of  24060 variables:
-#   ..$ model_name               : chr [1:145] "HCM-SANG-0265-C18" "HCM-SANG-0266-C20" "HCM-SANG-0267-D12" "HCM-SANG-0268-C18" ...
-#   ..$ model_id                 : chr [1:145] "SIDM01281" "SIDM01266" "SIDM01267" "SIDM01288" ...
-#   ..$ source                   : chr [1:145] "Sanger" "Sanger" "Sanger" "Sanger" ...
-#   ..$ symbol                   : chr [1:145] "" "" "" "" ...
-#   ..$ A1BG                     : chr [1:145] "Loss" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A1BG-AS1                 : chr [1:145] "Loss" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A1CF                     : chr [1:145] "Neutral" "Neutral" "Neutral" "Neutral" ...
-#   ..$ A2M                      : chr [1:145] "Neutral" "Neutral" "Neutral" "Gain" ...
-#   ..$ A2M-AS1                  : chr [1:145] "Neutral" "Neutral" "Neutral" "Gain" ...
-#   ..$ A2ML1                    : chr [1:145] "Neutral" "Neutral" "Neutral" "Gain" ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-#  $ WGS_total_cnv:Classes ‘data.table’ and 'data.frame': 145 obs. of  24060 variables:
-#   ..$ model_name               : chr [1:145] "HCM-SANG-0265-C18" "HCM-SANG-0266-C20" "HCM-SANG-0267-D12" "HCM-SANG-0268-C18" ...
-#   ..$ model_id                 : chr [1:145] "SIDM01281" "SIDM01266" "SIDM01267" "SIDM01288" ...
-#   ..$ source                   : chr [1:145] "Sanger" "Sanger" "Sanger" "Sanger" ...
-#   ..$ symbol                   : chr [1:145] "" "" "" "" ...
-#   ..$ A1BG                     : chr [1:145] "2.0031" "2.9518" "2.0368" "2.891" ...
-#   ..$ A1BG-AS1                 : chr [1:145] "2.0031" "2.9518" "2.0368" "2.891" ...
-#   ..$ A1CF                     : chr [1:145] "2.9966" "3.0134" "2.0056" "2.3861" ...
-#   ..$ A2M                      : chr [1:145] "2.5265" "2.9933" "1.9935" "3.9331" ...
-#   ..$ A2M-AS1                  : chr [1:145] "2.5265" "2.9933" "1.9935" "3.9331" ...
-#   ..$ A2ML1                    : chr [1:145] "2.5265" "2.9933" "1.9935" "3.9331" ...
-#   .. [list output truncated]
-#   ..- attr(*, ".internal.selfref")=<externalptr> 
-
+qs::qsave(matrices, file = OUTPUT$preprocessedCNV, nthreads = THREADS)

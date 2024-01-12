@@ -30,15 +30,17 @@ rule preprocessCNV:
     log:
         "logs/cnv/preprocessCNV.log",
     threads:
-        4
+        6
     script:
         "../scripts/cnv/preprocessCNV.R"
 
 rule make_CNV_SE:
     input:
-        preprocessedCNV = "procdata/cnv/preprocessedCNV.qs",
+        preprocessedCNV = rules.preprocessCNV.output.preprocessedCNV,
         metadata = "procdata/metadata.qs",
     output:
-        CNV_SE = "procdata/cnv/CNV_SE.qs",
+        CNV_se = "procdata/cnv/CNV_SE.qs",
+    log:
+        "logs/cnv/make_CNV_SE.log",
     script:
         "../scripts/cnv/make_CNV_SE.R"

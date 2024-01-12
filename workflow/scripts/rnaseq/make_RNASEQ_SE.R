@@ -6,20 +6,24 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    save.image()
+    # save.image()
 }
 
 library(data.table, quietly = TRUE)
-library(GenomicRanges, quietly = TRUE)
-# set up logging
+suppressPackageStartupMessages(library(GenomicRanges))
+
+
+# 0.1 Setup Logger
+# ----------------
+# create a logger from the LOGFILE path in append mode
 logger <- log4r::logger(
     appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
 
 # make a function to easily log messages to the logger
 info <- function(msg) log4r::info(logger, msg)
+info("Starting make_RNASEQ_SE.R\n")
 
-
-# 0.1 read in data
+# 0.2 read in data
 # ----------------
 info(paste0("Reading in: ", INPUT$metadata))
 metadata <- qs::qread(INPUT$metadata)
@@ -27,14 +31,14 @@ metadata <- qs::qread(INPUT$metadata)
 info(paste0("Reading in: ", INPUT$preprocessed))
 preproc <- qs::qread(INPUT$preprocessed, nthreads = THREADS)    
 
-# 0.2 read in rnaseq data
+# 0.3 read in rnaseq data
 # -----------------------
 info(
   paste0("Parsing rnaseq data from: ", paste(names(preproc), collapse = ", ")))
 
 assays_ <- preproc$assays
-rawData <- preproc$rawData
 rowRanges_ <- preproc$GRanges
+metadata_ <- preproc$metadata
 
 # 1. Create SummarizedExperiment objects for each rnaseq assay
 # ------------------------------------------------------------
@@ -42,12 +46,12 @@ assayNames_ <- names(assays_)
 
 # TODO:: CHANGE colnames to sampleid instead of cell model passport ID
 # TODO:: CHANGE rownames to ensembl gene id instead of gene symbol
-rse_list <- BiocParallel::bplapply(
+rse_list <- lapply(
   assayNames_, 
   function(assayName_){
     info(paste0("Creating SummarizedExperiment for ", assayName_))
     assay <- assays_[[assayName_]]
-    sampleids <- unique(colnames(assay))
+    sampleids <- colnames(assay)
 
     colData <- data.frame(
       sampleid = sampleids,
@@ -58,22 +62,17 @@ rse_list <- BiocParallel::bplapply(
     assays <- list(assay)
     names(assays) <- paste0("rnaseq.", assayName_)
 
-    metadata <- list(
-      data_source = snakemake@config$molecularProfiles$rnaseq$processed,
-      filename = unique(preproc$rawData[[assayName_]][["file"]])
-    )
-
     rse <- SummarizedExperiment::SummarizedExperiment(
       assays = assays,
       rowRanges = rowRanges,
       colData = colData,
-      metadata = metadata
+      metadata = metadata_[[assayName_]]
     )
     rse_show <- capture.output(rse)
     info(paste0(" SummarizedExperiment for: ", assayName_))
     info(paste0("\n\t", rse_show))
-  },
-  BPPARAM = BiocParallel::MulticoreParam(workers = THREADS)
+    return(rse)
+  }
 )
 names(rse_list) <- paste0("rnaseq.", assayNames_)
 

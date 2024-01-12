@@ -34,6 +34,11 @@ molecularProfiles:
           including cell lines and organoids."
         url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
 
+  cnv:
+    WES_CNV: 
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
+
   mutation:
     WGS_VCF: 
       description: "Caveman and Pindel processed VCFs with cancer driver annotation."
@@ -48,10 +53,7 @@ molecularProfiles:
       description: "The cancer driver gene list used by the Cell Model Passports"
       url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
-  cnv:
-    WES_CNV: 
-      description: TODO::(add description)
-      url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
+  
 
   methylation:
     processed: 

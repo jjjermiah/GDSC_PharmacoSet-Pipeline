@@ -6,24 +6,27 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    save.image()
+    # save.image()
 }
 
 library(data.table)
+suppressPackageStartupMessages(library(GenomicRanges))
 
-# set up logging
+# 0.1 Setup Logger
+# ----------------
+# create a logger from the LOGFILE path in append mode
 logger <- log4r::logger(
-    appenders = list(
-        log4r::file_appender(LOGFILE, append = TRUE)
-    )
-)
+    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
 
-# 0.1 read in metadata
+# make a function to easily log messages to the logger
+info <- function(msg) log4r::info(logger, msg)
+info("Starting preprocess_RNASEQ.R\n")
+
+# 0.2 read in metadata
 # --------------------
 metadata <- qs::qread(INPUT$metadata)
 sample <- metadata$sample
-
-genes <- metadata$geneAnnot
+geneAnnot <- metadata$GRanges
 
 # 0.2 read in rnaseq data
 # -----------------------
@@ -36,77 +39,66 @@ unzip(INPUT$all, exdir = allDir)
 # [3] "rnaseq_read_count_20220624.csv" "rnaseq_tpm_20220624.csv" 
 
 # file names without date or extension
-parsedNames <- lapply(
-    list.files(allDir), 
+parsedNames <- lapply(list.files(allDir), 
     function(x) gsub("^rnaseq_|_\\d{8}\\.csv", "", x)
 )
 
-# for each csv in allDir, read in the csv into a data.table and add a source col
+# for each csv in allDir, read in the csv into a data.table and add source col
 rnaseq_data <- lapply(list.files(allDir), function(file){
-    # message("Reading in ", file)
-    log4r::info(logger, paste0("Reading in ", file))
+    info(paste0("Reading in ", file))
     data <- data.table::fread(file.path(allDir, file), header = TRUE, sep = ",")
     data$file <- file
     data
 })
 names(rnaseq_data) <- parsedNames
 
-
-# . Get Gene annotation from Gencode
-# ----------------------------------
-log4r::info(logger, "Getting gene annotation from Gencode")
-path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/metadata/human/GRCh38_v44/annotation.gtf"
-dsGencode <- rtracklayer::import(path)
-
-dsGencode_dt <- data.table::as.data.table(dsGencode)
-dsGencode_dt$gene_id <- gsub("\\.\\d+$", "", dsGencode_dt$gene_id)
-
-genes_dt <- merge(
-    genes,
-    dsGencode_dt[type == "gene"],
-    by.x = "ensembl_gene_id",
-    by.y = "gene_id",
-    all.x=TRUE,      #
-    sort=FALSE
-)
-genes_dt$CMP_gene_id <- genes_dt$gene_id
-setnames(genes_dt, old = "ensembl_gene_id", new = "gene_id")
-
-gene_rRanges <- GenomicRanges::makeGRangesFromDataFrame(
-    genes_dt, keep.extra.columns=TRUE, na.rm = T)
-
 # 1.0 Subset rnaseq data to only include samples from GDSC metadata
 # -----------------------------------------------------------------
-log4r::info(
-    logger,"Subsetting rnaseq data to only include samples from GDSC metadata")
 
+info("Subsetting rnaseq data to only include samples from GDSC metadata")
+
+# NOTE: we are not going to use the "all" data due to the resources required
 dataset_types <- c("fpkm", "read_count", "tpm")
 assays <- BiocParallel::bplapply(
     dataset_types, 
     function(x){ 
+        info(sprintf("Subsetting %s", x))
         datatype_dt <- 
             rnaseq_data[[x]][
                 -(1:4),
                 colnames(rnaseq_data[[x]]) %in% c("model_id", sample$model_id), 
                 with = FALSE]
         setnames(datatype_dt,old = "model_id", new = "gene_id")
-        datatype_dt <- datatype_dt[gene_id %in% gene_rRanges$CMP_gene_id,]
 
-        # convert to matrix and set rownames to gene_id and remove gene_id column
-        as.matrix(
+        info(sprintf(
+            "Subsetting %s for only genes in GDSC gene annotation", x))
+        datatype_dt <- datatype_dt[gene_id %in% geneAnnot$CMP_gene_id,]
+
+        info(sprintf("Converting %s to matrix", x))
+        mtx <- as.matrix(
             datatype_dt[, !c("gene_id"), with = FALSE],
             rownames = datatype_dt[["gene_id"]]
         )
+        info(sprintf(
+            "Matrix %s has %d rows and %d columns", x, nrow(mtx), ncol(mtx)))
+        return(mtx)
     },
-    BPPARAM = BiocParallel::MulticoreParam(workers = 3))
+    BPPARAM = BiocParallel::MulticoreParam(workers = THREADS))
 names(assays) <- dataset_types
 
-log4r::info(logger, "Saving output files")
+metadata <- lapply(dataset_types, function(x) {
+    list(
+        data_source = snakemake@config$molecularProfiles$rnaseq$processed,
+        filename = unique(rnaseq_data[[x]][["file"]]))})
+names(metadata) <- dataset_types
+
+# 3. Save Output
+# --------------
+info("Saving Output Files")
 outputFiles <- list(
     "assays" = assays,
-    "rawData" = rnaseq_data,
-    "GRanges" = gene_rRanges
-)
+    "GRanges" = geneAnnot,
+    "metadata" = metadata)
 
 dir.create(dirname(OUTPUT$preprocessed), recursive = TRUE, showWarnings = FALSE)
 qs::qsave(outputFiles, file = OUTPUT$preprocessed, nthreads = THREADS)

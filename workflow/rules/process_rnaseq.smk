@@ -29,7 +29,7 @@ rule preprocess_RNASEQ:
     threads:
         3
     script:
-        "../scripts/rnaseq/process_RNASEQ.R"
+        "../scripts/rnaseq/preprocess_RNASEQ.R"
 
 rule make_RNASEQ_SE:
     input:
