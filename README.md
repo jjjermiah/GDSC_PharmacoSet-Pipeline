@@ -8,12 +8,10 @@
   - idea is to build the MAE first as that is the same between GDSC1 and GDSC2
   - then build the GDSC1 and GDSC2 treatmentResponseExperiment in two new repos
 - TODO:: annotate treatments and samples
-- TODO:: extract `GRanges` object into its own rule to be used across rules
-- TODO:: remove dependency of metadata file in each preprocessing rule, save for SE or build PSet
 - TODO:: annotate metadata for each `Experiment` object using config details
 - TODO:: molecularProfiles Create SummarizedExperiments
-  - rnaseq : DONE
-  - cnv : need pre-processing 
+  - rnaseq : createSummarizeExperiment DONE
+  - cnv : createSummarizeExperiment DONE
   - fusion : need pre-processing
   - mutation : pre-processing DONE
   - microarray : need pre-processing
