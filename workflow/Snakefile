@@ -19,9 +19,9 @@ include: "rules/process_fusion.smk"
 rule build_PharmacoSet:
     input:
         metadata = "procdata/metadata.qs",
+        CNV_SE = rules.make_CNV_SE.output.CNV_se,
+        rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
         preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
         mutation_SE = "procdata/mutation/mutation_SE.qs",
-        rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
-        CNV_SE = "procdata/cnv/CNV_SE.qs",
         fusion_SE = "procdata/fusion/fusion_se.qs",
 
