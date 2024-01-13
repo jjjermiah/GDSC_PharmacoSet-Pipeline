@@ -1,4 +1,4 @@
-## ------------------- Parse Snakemake Object ------------------- ##
+merged_dt[, -1], rownames = merged_dt$symbol)## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
     OUTPUT <- snakemake@output

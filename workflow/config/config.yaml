@@ -22,6 +22,10 @@ molecularProfiles:
     metadata_json: 
       description: TODO::(add description)
       url: "https://ftp.ebi.ac.uk/biostudies/fire/E-MTAB-/610/E-MTAB-3610/Files/raw-data_filelist.json"
+    processed: 
+      description: "RMA normalised basal expression profiles for all the cell-lines."
+      reference: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Home.html"
+      url: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources///Data/preprocessed/Cell_line_RMA_proc_basalExp.txt.zip"
   
   rnaseq:
     rawdata: 
@@ -53,8 +57,6 @@ molecularProfiles:
       description: "The cancer driver gene list used by the Cell Model Passports"
       url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
-  
-
   methylation:
     processed: 
       description: TODO::(add description)
@@ -65,6 +67,9 @@ molecularProfiles:
     meth_cell_data: 
       description: TODO::(add description)
       url: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources/Data/preprocessed/methylation/METH_CELL_DATA.txt.zip"
+    sample_mapping_metadata:
+      description: TODO::(add description)
+      url: "https://www.cancerrxgene.org/gdsc1000/GDSC1000_WebResources//Data/otherAnnotations/methSampleId_2_cosmicIds.xlsx"
 
   fusion:
     gene_fusions:
