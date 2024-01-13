@@ -10,33 +10,43 @@ if(exists("snakemake")){
 
 library(data.table)
 suppressPackageStartupMessages(library(SummarizedExperiment))
-# 0.1 read in metadata
+
+# 0.1 Setup Logger
+# ----------------
+# create a logger from the LOGFILE path in append mode
+logger <- log4r::logger(
+    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+
+# make a function to easily log messages to the logger
+info <- function(msg) log4r::info(logger, msg)
+info("Starting preprocess_MUTATION.R\n")
+
+# 0.2 read in metadata
 # -------------------- 
 metadata <- qs::qread(INPUT$metadata)
 sample <- metadata$sample
 geneAnnot <- metadata$GRanges
 
-# 0.2 read in mutation data
+# 0.3 read in mutation data
 # -------------------------
 dir <- paste0(dirname(INPUT$all_mutations), "/all")
 allDir <- paste0(dirname(INPUT$all_mutations), "/all")
 dir.create(allDir, recursive = TRUE, showWarnings = FALSE)
 unzip(INPUT$all_mutations, exdir = allDir)
 
-
-# 0.3 read mutation gene metadata
+# 0.4 read mutation gene metadata
 # -------------------------------
 mut_data <- data.table::fread(
     file.path(allDir, list.files(allDir)), 
     header = TRUE, sep = ",", showProgress = F)
 
-# 0.4 read mutation gene metadata
+# 0.5 read mutation gene metadata
 # -------------------------------
 mutGenesAnnot <- data.table::fread(INPUT$Genes_Metadata, header = TRUE, sep = ",")
 
 # 1.0 Subset mutation data to only include samples from GDSC metadata
 # -------------------------------------------------------------------
-data.table::setkey(mut_dt, model_id)
+data.table::setkey(mut_data, model_id)
 mut_dt <- unique(merge(
     sample[, .(sampleid, model_id)], 
     mut_data, 
@@ -89,20 +99,21 @@ matrices <- BiocParallel::bplapply(assay_cols, function(x){
     mtx
     },
     BPPARAM = BiocParallel::MulticoreParam(workers = THREADS))
+names(matrices) <- assay_cols
 
+# 4.0 Setup metadata for SummarizedExperiment object
+# --------------------------------------------------
+metadata <- list(
+    data_source = snakemake@config$molecularProfiles$mutation$SUMMARY,
+    filename.data = INPUT$all_mutations,
+    filename.gene_metadata = INPUT$Genes_Metadata)
 
+# 5.0 Save Output
+# ---------------
+outputFiles <- list(
+    "assays" = matrices,
+    "GRanges" = geneAnnot,
+    "metadata" = metadata)
 
-# # . Get Gene annotation from Gencode
-# path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/metadata/human/GRCh38_v44/annotation.gtf"
-# dsGencode <- rtracklayer::import(path)
-
-# # remove gene_id version from dsGencode 
-# dsGencode$gene_id <- gsub("\\.\\d+$", "", dsGencode$gene_id)
-
-# geneAnnot <- geneAnnot[ensembl_gene_id %in% dsGencode$gene_id]
-# # genes <- merge(geneAnnot, dsGencode, by.x = "ensembl_gene_id", by.y = "gene_id")
-
-# mut <- merge(mut_dt, geneAnnot, by.x = "gene_id", by.y = "gene_id")
-
-
-
+dir.create(dirname(OUTPUT$preprocessed), recursive = TRUE, showWarnings = FALSE)
+qs::qsave(outputFiles, file = OUTPUT$preprocessed, nthreads = THREADS)

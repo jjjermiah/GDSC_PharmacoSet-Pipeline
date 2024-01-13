@@ -21,6 +21,8 @@ rule preprocess_MUTATION:
         preprocessed = "procdata/mutation/preprocessed_mutation.qs",
     log:
         "logs/mutation/preprocess_MUTATION.log",
+    threads:
+        3
     script:
         "../scripts/mutation/preprocess_MUTATION.R"
 
@@ -29,6 +31,8 @@ rule make_MUTATION_SE:
         preprocessed = rules.preprocess_MUTATION.output.preprocessed,
     output:
         mutation_SE = "procdata/mutation/mutation_SE.qs",
+    log:
+        "logs/mutation/make_MUTATION_SE.log",
     script:
         "../scripts/mutation/make_MUTATION_SE.R"
 
