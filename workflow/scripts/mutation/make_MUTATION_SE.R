@@ -64,5 +64,5 @@ rse <- list(
 
 info(paste("SummarizedExperiment:", capture.output(rse),collapse = "\n"))
 
-dir.create(dirname(OUTPUT$mutation_SE), recursive = TRUE, showWarnings = FALSE)
-qs::qsave(rse, file = OUTPUT$mutation_SE)
+dir.create(dirname(OUTPUT$mutation_se), recursive = TRUE, showWarnings = FALSE)
+qs::qsave(rse, file = OUTPUT$mutation_se)

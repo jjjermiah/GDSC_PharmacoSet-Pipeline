@@ -22,7 +22,7 @@ rule preprocess_MUTATION:
     log:
         "logs/mutation/preprocess_MUTATION.log",
     threads:
-        3
+        6
     script:
         "../scripts/mutation/preprocess_MUTATION.R"
 
@@ -30,7 +30,7 @@ rule make_MUTATION_SE:
     input:
         preprocessed = rules.preprocess_MUTATION.output.preprocessed,
     output:
-        mutation_SE = "procdata/mutation/mutation_SE.qs",
+        mutation_se = "procdata/mutation/mutation_SE.qs",
     log:
         "logs/mutation/make_MUTATION_SE.log",
     script:

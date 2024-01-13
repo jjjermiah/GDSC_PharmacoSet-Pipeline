@@ -19,9 +19,21 @@ include: "rules/process_fusion.smk"
 rule build_PharmacoSet:
     input:
         metadata = rules.preprocess_METADATA.output.metadata,
-        CNV_SE = rules.make_CNV_SE.output.CNV_se,
-        rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
-        fusion_SE = rules.make_FUSION_SE.output.fusion_se,
+        summarizedExperiments = [
+            rules.make_CNV_SE.output.CNV_se,
+            rules.make_RNASEQ_SE.output.rnaseq_se,
+            rules.make_FUSION_SE.output.fusion_se,
+            rules.make_MUTATION_SE.output.mutation_se
+        ]
+        # CNV_SE = rules.make_CNV_SE.output.CNV_se,
+        # rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
+        # fusion_SE = rules.make_FUSION_SE.output.fusion_se,
+        # mutation_SE = rules.make_MUTATION_SE.output.mutation_se
         # preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
-        mutation_SE = "procdata/mutation/mutation_SE.qs",
-
+    output:
+        pset = "procdata/pharmacogenomics/PharmacoSet.qs"
+    log:
+        "logs/build_PharmacoSet.log"
+    threads: 4
+    script:
+        "scripts/build_PharmacoSet.R"
