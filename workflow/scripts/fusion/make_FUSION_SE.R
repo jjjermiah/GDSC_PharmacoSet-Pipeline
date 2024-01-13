@@ -42,7 +42,7 @@ se <- list(
     "fusion" = SummarizedExperiment::SummarizedExperiment(
         assays = list(fusions = assays),
         colData = data.frame(
-            model_id = colnames(assays),
+            sampleid = colnames(assays),
             batchid = rep(NA, ncol(assays))
         ),
         rowData = rowData,

@@ -31,7 +31,7 @@ rule build_PharmacoSet:
         # mutation_SE = rules.make_MUTATION_SE.output.mutation_se
         # preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
     output:
-        pset = "procdata/pharmacogenomics/PharmacoSet.qs"
+        pset = "results/data/PharmacoSet.qs"
     log:
         "logs/build_PharmacoSet.log"
     threads: 4

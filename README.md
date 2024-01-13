@@ -24,5 +24,13 @@ snakemake \
   --rulegraph | dot -Tsvg > resources/rulegraph.svg
 ```
 
+# MultiAssayExperiment Subsetting
+``` R
+rowRanges(mae@ExperimentList[[1]]) -> mae_rows
+mae[rowRanges(mae@ExperimentList[[1]]),] -> r
+MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
+
+```
+
 ### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
 ![pipeline status](resources/rulegraph.svg)
