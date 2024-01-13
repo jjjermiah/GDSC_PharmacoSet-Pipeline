@@ -6,9 +6,10 @@ HTTP = HTTPRemoteProvider()
 
 
 configfile: "workflow/config/config.yaml"
+molecularProfiles = config['molecularProfiles']
 
-include: "rules/downloadData.smk"
-include: "rules/processMetadata.smk"
+
+include: "rules/process_metadata.smk"
 include: "rules/process_microarray.smk"
 include: "rules/process_rnaseq.smk"
 include: "rules/process_mutation.smk"
@@ -17,23 +18,22 @@ include: "rules/process_fusion.smk"
 
 rule build_PharmacoSet:
     input:
-        metadata = "procdata/metadata.qs",
-        preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
-        mutation_SE = "procdata/mutation/mutation_SE.qs",
-        rnaseq_SE = "procdata/rnaseq/rnaseq_SE.qs",
-        CNV_SE = "procdata/cnv/CNV_SE.qs",
-        fusion_SE = "procdata/fusion/fusion_se.qs",
-
-
-# rule preprocessMETHYLATION:
-#     input:
-#         methylationData = "rawdata/methylation/METH_CELL_DATA.txt",
-#     output:
-#         preprocessedMETHYLATION = "procdata/methylation/preprocessedMETHYLATION.qs",
-#     threads:
-#         10
-#     script:
-#         "scripts/preprocessMETHYLATION.R"
-
-
-
+        metadata = rules.preprocess_METADATA.output.metadata,
+        summarizedExperiments = [
+            rules.make_CNV_SE.output.CNV_se,
+            rules.make_RNASEQ_SE.output.rnaseq_se,
+            rules.make_FUSION_SE.output.fusion_se,
+            rules.make_MUTATION_SE.output.mutation_se
+        ]
+        # CNV_SE = rules.make_CNV_SE.output.CNV_se,
+        # rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
+        # fusion_SE = rules.make_FUSION_SE.output.fusion_se,
+        # mutation_SE = rules.make_MUTATION_SE.output.mutation_se
+        # preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
+    output:
+        pset = "results/data/PharmacoSet.qs"
+    log:
+        "logs/build_PharmacoSet.log"
+    threads: 4
+    script:
+        "scripts/build_PharmacoSet.R"

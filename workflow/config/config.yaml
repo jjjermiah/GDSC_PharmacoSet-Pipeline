@@ -33,12 +33,11 @@ molecularProfiles:
         description: "Read counts, TPM & FPKM-values for all sequenced models 
           including cell lines and organoids."
         url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
-      sanger:
-        description: "Sanger cell line data processed using the iRAP pipeline."
-        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_sanger_20210316.zip"
-      broad:
-        description: "Broad cell line data processed using the iRAP pipeline."
-        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_broad_20210317.zip"
+
+  cnv:
+    WES_CNV: 
+      description: TODO::(add description)
+      url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
 
   mutation:
     WGS_VCF: 
@@ -54,13 +53,7 @@ molecularProfiles:
       description: "The cancer driver gene list used by the Cell Model Passports"
       url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
-  cnv:
-    WGS_CNV: 
-      description: TODO::(add description)
-      url: "https://cog.sanger.ac.uk/cmp/download/WGS_purple_CNV_genes_20230303.zip"
-    WES_CNV: 
-      description: TODO::(add description)
-      url: "https://cog.sanger.ac.uk/cmp/download/WES_pureCN_CNV_genes_20221213.zip"
+  
 
   methylation:
     processed: 

@@ -7,20 +7,30 @@
 - treatment data is yet to be downloaded.
   - idea is to build the MAE first as that is the same between GDSC1 and GDSC2
   - then build the GDSC1 and GDSC2 treatmentResponseExperiment in two new repos
+- TODO:: annotate treatments and samples
+- TODO:: annotate metadata for each `Experiment` object using config details
+- TODO:: molecularProfiles Create SummarizedExperiments
+  - rnaseq : createSummarizeExperiment DONE
+  - cnv : createSummarizeExperiment DONE
+  - fusion : need pre-processing
+  - mutation : pre-processing DONE
+  - microarray : need pre-processing
+- TODO:: create conda environments + docker images for each rule and use them in the pipeline
   
+
 ``` bash
 snakemake \
   --snakefile workflow/Snakefile \
   --rulegraph | dot -Tsvg > resources/rulegraph.svg
 ```
-![pipeline status](resources/rulegraph.svg)
 
-# download source data files
+# MultiAssayExperiment Subsetting
+``` R
+rowRanges(mae@ExperimentList[[1]]) -> mae_rows
+mae[rowRanges(mae@ExperimentList[[1]]),] -> r
+MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
 
-``` bash
-snakemake \
-  --snakefile workflow/Snakefile \
-  --cores 4 \
-  --keep-going \
-  downloadAllData
 ```
+
+### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
+![pipeline status](resources/rulegraph.svg)

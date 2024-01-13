@@ -77,7 +77,7 @@ rule preprocess_MicroArray:
     threads:
         4
     script:
-        "../scripts/preprocess_MICROARRAY.R"
+        "../scripts/microarray/preprocess_MICROARRAY.R"
 
 rule download_MicroArrayFILE: 
     output:
