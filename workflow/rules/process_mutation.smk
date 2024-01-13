@@ -19,6 +19,8 @@ rule preprocess_MUTATION:
         metadata = rules.preprocess_METADATA.output.metadata,
     output:
         preprocessed = "procdata/mutation/preprocessed_mutation.qs",
+    log:
+        "logs/mutation/preprocess_MUTATION.log",
     script:
         "../scripts/mutation/preprocess_MUTATION.R"
 

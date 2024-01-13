@@ -42,7 +42,6 @@ metadata_ <- preproc$metadata
 assayNames_ <- names(assays_)
 
 # TODO:: CHANGE colnames to sampleid instead of cell model passport ID
-# TODO:: CHANGE rownames to ensembl gene id instead of gene symbol
 rse_list <- lapply(
   assayNames_, 
   function(assayName_){

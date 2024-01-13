@@ -32,10 +32,11 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    save.image()
+    # save.image()
 }
 
 library(data.table)
+suppressPackageStartupMessages(library(GenomicRanges))
 
 # 0.1 Setup Logger
 # ----------------
@@ -46,7 +47,7 @@ logger <- log4r::logger(
 # make a function to easily log messages to the logger
 info <- function(msg) log4r::info(logger, msg)
 info("Starting preprocessCNV.R\n")
-
+    
 # 0.2 Read in the input files
 # ---------------------------
 metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
@@ -143,7 +144,7 @@ matrices <- BiocParallel::bplapply(
         return(mtx)
     },
     BPPARAM = BiocParallel::MulticoreParam(
-        workers = THREADS, timeout=3600, progressbar = TRUE)
+        workers = THREADS, timeout=3600)
 )
 names(matrices) <- paste0("Sanger.", assayNames)
 
@@ -157,6 +158,18 @@ if(all.equal(lengths(lapply(matrices, nrow)),lengths(lapply(matrices, ncol)))){
     stop("preprocessCNV.R: Not all matrices have the same number of rows and columns")
 }
 
+metadata <- list(
+    data_source = snakemake@config$molecularProfiles$cnv,
+    filename = INPUT[[gene_files]])
+
+# 3. Save Output
+# --------------
+info("Saving Output Files")
+outputFiles <- list(
+    "assays" = matrices,
+    "GRanges" = geneAnnot,
+    "metadata" = metadata)
+
 # make output directory if it doesnt exist
 dir.create(dirname(OUTPUT$preprocessedCNV), recursive = TRUE, showWarnings = FALSE)
-qs::qsave(matrices, file = OUTPUT$preprocessedCNV, nthreads = THREADS)
+qs::qsave(outputFiles, file = OUTPUT$preprocessedCNV, nthreads = THREADS)

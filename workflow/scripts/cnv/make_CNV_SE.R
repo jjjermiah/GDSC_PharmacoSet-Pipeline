@@ -6,7 +6,7 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    # save.image()
+    save.image()
 }
 
 library(data.table)
@@ -23,21 +23,21 @@ info("Starting make_CNV_SE.R\n")
 
 # 0.2 Read in the input files
 # ---------------------------
-
-sample <- metadata$sample
-geneAnnot <- metadata$GRanges
-
 info(paste("Loading", INPUT$preprocessedCNV, " "))
-matrices <- qs::qread(INPUT$preprocessedCNV, nthreads = THREADS)
+preproc <- qs::qread(INPUT$preprocessedCNV, nthreads = THREADS)
 
-# info(paste(
-#     "Matrices:", 
-#     capture.output(str(matrices)),
-#     collapse = "\n"))
+assays_ <- preproc$assays
+rowRanges_ <- preproc$GRanges
+metadata_ <- preproc$metadata
+
+info(paste(
+    "Matrices:", 
+    capture.output(str(assays_)),
+    collapse = "\n"))
 
 
-sampleids <- unique(unlist(lapply(matrices, colnames)))
-geneids <- unique(unlist(lapply(matrices, rownames)))
+sampleids <- unique(unlist(lapply(assays_, colnames)))
+geneids <- unique(unlist(lapply(assays_, rownames)))
 
 info(sprintf(
     "\nTotal number of samples: %d\nTotal number of genes: %d", 
@@ -48,22 +48,18 @@ colData <- data.frame(
       batchid = rep(NA, length(sampleids))
 )
 
-rowRanges <- geneAnnot[geneAnnot$symbol %in% geneids,]
+rowRanges <- rowRanges_[rowRanges_$symbol %in% geneids,]
 
 rse <- SummarizedExperiment::SummarizedExperiment(
-    assays = matrices,
+    assays = assays_,
     rowRanges = rowRanges,
     colData = colData,
-    metadata = list(
-        data_source = snakemake@config$molecularProfiles$cnv
-    )
+    metadata = metadata_
 )
-
-info(paste(
-    "SummarizedExperiment:", 
-    capture.output(rse),
-    collapse = "\n"
-))
+rse <- list(
+    "cnv" = rse
+)
+info(paste("SummarizedExperiment:", capture.output(rse),collapse = "\n"))
 
 dir.create(dirname(OUTPUT$CNV_se), recursive = TRUE, showWarnings = FALSE)
 qs::qsave(rse, file = OUTPUT$CNV_se)

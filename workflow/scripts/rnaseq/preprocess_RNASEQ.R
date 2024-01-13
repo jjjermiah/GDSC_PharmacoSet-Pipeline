@@ -70,7 +70,18 @@ assays <- BiocParallel::bplapply(
                 -(1:4),
                 colnames(rnaseq_data[[x]]) %in% c("model_id", sample$model_id), 
                 with = FALSE]
-        setnames(datatype_dt,old = "model_id", new = "gene_id")
+
+        sample_subset <- 
+            sample[model_id %in% colnames(datatype_dt), .(sampleid, model_id)]
+        
+        data.table::setnames(
+            x = datatype_dt,
+            old = c("model_id", sample_subset$model_id), 
+            new = c("gene_id", sample_subset$sampleid))
+
+        # set column order alphabetically
+        ordered_cols <- c("gene_id", sort(colnames(datatype_dt)[-1]))
+        datatype_dt <- datatype_dt[, ..ordered_cols]
 
         info(sprintf(
             "Subsetting %s for only genes in GDSC gene annotation", x))
