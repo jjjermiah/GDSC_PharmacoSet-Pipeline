@@ -10,7 +10,8 @@ if(exists("snakemake")){
     save.image()
 }
 
-
+suppressPackageStartupMessages(library(SummarizedExperiment))
+suppressPackageStartupMessages(library(CoreGx))
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode

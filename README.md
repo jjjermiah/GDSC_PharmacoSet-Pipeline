@@ -12,6 +12,7 @@
 - TODO:: molecularProfiles Create SummarizedExperiments
   - rnaseq : createSummarizeExperiment DONE
   - cnv : createSummarizeExperiment DONE
+      - Need to unzip rawdata within preprocessing instead
   - fusion : need pre-processing
   - mutation : pre-processing DONE
   - microarray : need pre-processing

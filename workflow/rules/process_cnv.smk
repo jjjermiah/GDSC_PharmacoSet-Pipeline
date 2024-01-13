@@ -9,15 +9,15 @@
 #     shell:
 #         "unzip -d $(dirname {output.WGS_genes}) {input.WGS}; rm {input.WGS}"
 
-# rule downloadCNV_WESData:
-#     input:
-#         WES = HTTP.remote(molecularProfiles['cnv']['WES_CNV'])
-#     output:
-#         WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
-#         WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
-#         WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
-#     shell:
-#         "unzip -d $(dirname {output.WES_genes}) {input.WES}; rm {input.WES}"
+rule downloadCNV_WESData:
+    input:
+        WES = HTTP.remote(molecularProfiles['cnv']['WES_CNV']['url'])
+    output:
+        WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
+        WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
+        WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
+    shell:
+        "unzip -d $(dirname {output.WES_genes}) {input.WES}; rm {input.WES}"
 
 rule preprocess_CNV:
     input:
