@@ -30,6 +30,15 @@
 
 This pipeline has a snakemake profile set up at `workflow/profiles/`. 
 This profile helps to remove the need to specify options at the command line.
+
+### Installing snakemake 
+For some reason, snakemake and python 3.12 has some f-string issues. 
+``` bash
+mamba create -n snakemake \
+  -c conda-forge -c bioconda \
+  snakemake=7.34 python=3.11 -y
+```
+
 To use this profile, set the environment variable:
 ``` bash
 export SNAKEMAKE_PROFILE="workflow/profiles"
