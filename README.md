@@ -30,6 +30,15 @@
 
 This pipeline has a snakemake profile set up at `workflow/profiles/`. 
 This profile helps to remove the need to specify options at the command line.
+
+### Installing snakemake 
+For some reason, snakemake and python 3.12 has some f-string issues. 
+``` bash
+mamba create -n snakemake \
+  -c conda-forge -c bioconda \
+  snakemake=7.34 python=3.11 -y
+```
+
 To use this profile, set the environment variable:
 ``` bash
 export SNAKEMAKE_PROFILE="workflow/profiles"
@@ -39,6 +48,7 @@ Now to run the pipeline, simply run:
 ``` bash
 snakemake
 ```
+
 # creating the workflow DAG
 
 ``` bash
@@ -48,6 +58,56 @@ snakemake \
 ```
 ### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
 ![pipeline status](resources/rulegraph.svg)
+
+# Workflow Directory
+The workflow directory is structured as follows:
+
+``` bash
+workflow/
+├── config
+│   └── config.yaml
+├── envs
+│   ├── cnv.yaml
+│   ├── fusion.yaml
+│   ├── microarray.yaml
+│   ├── mutation.yaml
+│   ├── PharmacoSet.yaml
+│   ├── rnaseq.yaml
+│   └── test.yaml
+├── profiles
+│   └── config.yaml
+├── rules
+│   ├── process_cnv.smk
+│   ├── process_fusion.smk
+│   ├── process_metadata.smk
+│   ├── process_methylation.smk
+│   ├── process_microarray.smk
+│   ├── process_mutation.smk
+│   └── process_rnaseq.smk
+├── scripts
+│   ├── cnv
+│   │   ├── make_CNV_SE.R
+│   │   └── preprocess_CNV.R
+│   ├── fusion
+│   │   ├── make_FUSION_SE.R
+│   │   └── preprocess_FUSION.R
+│   ├── metadata
+│   │   └── preprocessMetadata.R
+│   ├── methylation
+│   │   └── preprocess_METHYLATION.R
+│   ├── microarray
+│   │   └── preprocess_MICROARRAY.R
+│   ├── mutation
+│   │   ├── make_MUTATION_SE.R
+│   │   └── preprocess_MUTATION.R
+│   ├── pharmacoset
+│   │   ├── build_PharmacoSet.R
+│   │   └── GDSC_PharmacoSet.Rmd
+│   └── rnaseq
+│       ├── make_RNASEQ_SE.R
+│       └── preprocess_RNASEQ.R
+└── Snakefile
+```
 
 
 # MultiAssayExperiment Subsetting
