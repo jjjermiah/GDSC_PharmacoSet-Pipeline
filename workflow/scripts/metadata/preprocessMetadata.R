@@ -1,21 +1,63 @@
+#' RULE: preprocessMetadata
+#' AUTHOR: Jermiah Joseph
+#' CREATED: 01-08-2024
+#' This script takes in the following files:
+#' - INPUT$sampleMetadata
+#' - INPUT$treatmentMetadata
+#' - INPUT$cellModelPassportsMetadata
+#' - INPUT$cellmodelpassportsGeneAnnotation
+#' - INPUT$gencode_annotation_file
+#' and outputs the following files:
+#' - OUTPUT$metadata
+#' 
+#' PACKAGE DEPENDENCIES:
+#' - data.table
+#' - GenomicRanges
+#' - log4r
+#' - qs
+#' - readxl
+#' - rtracklayer
+#' 
 
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
     OUTPUT <- snakemake@output
-       
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
-    # save.image()
+    LOGFILE <- snakemake@log[[1]]
+    save.image()
 }
 
+# 0.1 Setup Logger
+# ----------------
+# create a logger from the LOGFILE path in append mode
+logger <- log4r::logger(
+    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+
+# make a function to easily log messages to the logger
+info <- function(msg) log4r::info(logger, msg)
+info("Starting preprocessCNV.R\n")
+    
+# 0.2 Read in the sample metadata
+# -------------------------------
+info("Reading in sample metadata")
 sample <- readxl::read_excel(INPUT$sampleMetadata, sheet = 1, col_names = TRUE, na = "NA")
 sample <- data.table::as.data.table(sample)
+info(paste0("Number of samples: ", nrow(sample)))
 
+# 0.3 Read in the treatment metadata
+# ----------------------------------
+info("Reading in treatment metadata")
 treatment <- data.table::fread(INPUT$treatmentMetadata, header = TRUE)
+info(paste0("Number of treatments: ", nrow(treatment)))
 
+# 0.4 Read in the Cell Model Passport metadata
+# --------------------------------------------
+info("Reading in Cell Model Passport metadata")
 cellmodels <- data.table::fread(INPUT$cellModelPassportsMetadata, header = TRUE)
 
+info("Subsetting Cell Model Passport metadata to only samples in GDSC sample metadata")
 gdsc_cmp <- cellmodels[model_name %in% sample$`Sample Name`]
 cols <- c(
     'model_id', 'sample_id', 'model_name', 'tissue', 'cancer_type', 
@@ -29,12 +71,15 @@ sampleMetadata <- merge(sample[,.(`Sample Name`)], gdsc_cmp, by.x = "Sample Name
 # rename Sample Name to sample_id
 data.table::setnames(sampleMetadata, "Sample Name", "sampleid")
 
+info(capture.output(str(sampleMetadata)))
+
 # 3. Build Genomic Annotation
 # ---------------------------
 geneAnnot <- data.table::fread(INPUT$cellmodelpassportsGeneAnnotation, header = TRUE)
-path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/metadata/human/GRCh38_v44/annotation.gtf"
-dsGencode <- rtracklayer::import(path)
-dsGencode_dt <- data.table::as.data.table(dsGencode)
+
+gencodeAnnot <- rtracklayer::import(INPUT$gencode_annotation_file)
+
+dsGencode_dt <- data.table::as.data.table(gencodeAnnot)
 
 # remove version numbers from gene_id, transcript_id, havana_transcript, exon_id
 # i.e ENST00000456328.2  -> ENST00000456328
