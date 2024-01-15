@@ -1,12 +1,16 @@
 # AUTHOR: Jermiah Joseph
 # CREATED: 01-08-2024
-# DESCRIPTION:
-#  This script reads in the raw CNV data and subsets it to only include samples
-#  and genes in the GDSC sample and gene annotations. The output is a list of
-#  data.tables, one for each input file.
+# This script takes in the following files:
+#  - INPUT$metadata
+#  - INPUT$WES_genes
+#  - INPUT$WES_category
+#  - INPUT$WES_total_cnv
+# and outputs the following files:
+#  - OUTPUT$preprocessedCNV
 # 
 # PACKAGE DEPENDENCIES:
 #  - data.table
+#  - GenomicRanges
 #  - log4r
 #  - BiocParallel
 #  - qs

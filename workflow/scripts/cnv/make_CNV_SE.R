@@ -1,3 +1,18 @@
+#' RULE: make_CNV_SE
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#' - INPUT$preprocessedCNV
+#' and outputs the following files:
+#' - OUTPUT$CNV_se
+#' 
+#' Libraries Used:
+#' - data.table
+#' - SummarizedExperiment
+#' - log4r
+#' - BiocParallel
+#' - qs
+#' - GenomicRanges
 
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){

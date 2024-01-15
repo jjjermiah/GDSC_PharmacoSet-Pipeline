@@ -1,3 +1,19 @@
+#' RULE: make_MUTATION_SE
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#' - INPUT$preprocessed
+#' and outputs the following files:
+#' - OUTPUT$mutation_se
+#' 
+#' Libraries Used:
+#' - data.table
+#' - SummarizedExperiment
+#' - log4r
+#' - BiocParallel
+#' - qs
+#' 
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input

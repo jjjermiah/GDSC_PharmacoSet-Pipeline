@@ -1,3 +1,20 @@
+#' RULE: preprocess_MUTATION
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#'  - INPUT$metadata
+#' - INPUT$all_mutations
+#' - INPUT$Genes_Metadata
+#' and outputs the following files:
+#' - OUTPUT$preprocessed
+#' 
+#' Libraries Used:
+#' - data.table
+#' - GenomicRanges
+#' - log4r
+#' - BiocParallel
+#' - qs
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
@@ -9,7 +26,6 @@ if(exists("snakemake")){
 }
 
 library(data.table)
-suppressPackageStartupMessages(library(SummarizedExperiment))
 
 # 0.1 Setup Logger
 # ----------------
@@ -74,7 +90,7 @@ mut_dt <- unique(merge(
 #     df = mutGenesAnnot, keep.extra.columns=TRUE, na.rm=TRUE,
 #     start.field = "chr_start", end.field = "chr_end", seqnames.field = "seqnames",)
 
-# 3.0 Create SummarizedExperiment object from mut_dt
+# 3.0 Create Assays object from mut_dt
 # -------------------------------------------------
 # isolate only columns to use for assay
 assay_cols <- c("protein_mutation", "rna_mutation",
