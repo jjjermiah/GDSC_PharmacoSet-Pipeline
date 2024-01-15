@@ -1,8 +1,10 @@
+mutation_conda_env = "../envs/mutation.yaml"
+mutation = molecularProfiles['mutation']
 
 rule download_MUTATION_processed:
     input:
-        all_mutations = HTTP.remote(molecularProfiles['mutation']['SUMMARY']['url']),
-        Genes_Metadata = HTTP.remote(molecularProfiles['mutation']['Genes_Metadata']['url']),
+        all_mutations = HTTP.remote(mutation['SUMMARY']['url']),
+        Genes_Metadata = HTTP.remote(mutation['Genes_Metadata']['url']),
     output:
         all_mutations = "rawdata/mutation/mutations_all_20230202.zip",
         Genes_Metadata = "rawdata/mutation/driver_mutations_20221208.csv",
@@ -23,6 +25,8 @@ rule preprocess_MUTATION:
         preprocessed = "procdata/mutation/preprocessed_mutation.qs",
     log:
         "logs/mutation/preprocess_MUTATION.log",
+    conda:
+        mutation_conda_env,
     threads:
         6
     script:
@@ -35,14 +39,16 @@ rule make_MUTATION_SE:
         mutation_se = "results/data/mutation/mutation_SE.qs",
     log:
         "logs/mutation/make_MUTATION_SE.log",
+    conda:
+        mutation_conda_env,
     script:
         "../scripts/mutation/make_MUTATION_SE.R"
 
 # Until figure out how to process VCF files for mutations, use the processed data
 # rule download_MUTATION_VCF:
 #     input:
-#         WGS_VCF = HTTP.remote(molecularProfiles['mutation']['WGS_VCF']['url']),
-#         WES_VCF = HTTP.remote(molecularProfiles['mutation']['WES_VCF']['url']),
+#         WGS_VCF = HTTP.remote(mutation['WGS_VCF']['url']),
+#         WES_VCF = HTTP.remote(mutation['WES_VCF']['url']),
 #     output:
 #         WGS_VCF = "rawdata/mutation/mutations_wgs_vcf_20221123.zip",
 #         WES_VCF = "rawdata/mutation/mutations_wes_vcf_20221010.zip",

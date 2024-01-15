@@ -30,6 +30,8 @@ rule build_PharmacoSet:
         pset = "results/data/PharmacoSet.qs"
     log:
         "logs/build_PharmacoSet.log"
+    conda:
+        "envs/PharmacoSet.yaml"
     threads:
         4
     script:

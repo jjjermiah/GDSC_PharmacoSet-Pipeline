@@ -1,19 +1,22 @@
 ################################################################################
 ## RNA-SEQ
 
+rnaseq_conda_env = "../envs/rnaseq.yaml"
+rnaseq = molecularProfiles['rnaseq']
+
 rule download_RNASEQ:
     input:
-        all = HTTP.remote(molecularProfiles['rnaseq']['processed']['all']['url'])
+        processed = HTTP.remote(rnaseq['processed']['url'])
     output:
-        all = "rawdata/rnaseq/rnaseq_all_20220624.zip",
+        processed = "rawdata/rnaseq/rnaseq_all_20220624.zip",
     shell:
         """
-        mv {input.all} {output.all} 
+        mv {input.processed} {output.processed} 
         """
 
 rule preprocess_RNASEQ:
     input:
-        all = rules.download_RNASEQ.output.all,
+        processed = rules.download_RNASEQ.output.processed,
         metadata = rules.preprocess_METADATA.output.metadata
     output:
         preprocessed = "procdata/rnaseq/preprocessed_rnaseq.qs",
@@ -21,6 +24,8 @@ rule preprocess_RNASEQ:
         "logs/rnaseq/preprocess_RNASEQ.log"
     threads:
         3
+    conda:
+        rnaseq_conda_env
     script:
         "../scripts/rnaseq/preprocess_RNASEQ.R"
 
@@ -33,5 +38,7 @@ rule make_RNASEQ_SE:
         "logs/rnaseq/make_RNASEQ_SE.log"
     threads:
         3
+    conda:
+        rnaseq_conda_env
     script:
         "../scripts/rnaseq/make_RNASEQ_SE.R"
