@@ -18,6 +18,7 @@ include: "rules/process_mutation.smk"
 include: "rules/process_cnv.smk"
 include: "rules/process_fusion.smk"
 include: "rules/process_methylation.smk"
+include: "rules/process_treatmentResponse.smk"
 
 rule build_PharmacoSet:
     input:
