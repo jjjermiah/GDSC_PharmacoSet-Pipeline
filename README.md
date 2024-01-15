@@ -46,9 +46,6 @@ snakemake \
   --snakefile workflow/Snakefile \
   --rulegraph | dot -Tsvg > resources/rulegraph.svg
 ```
-
-
-
 ### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
 ![pipeline status](resources/rulegraph.svg)
 

@@ -1,7 +1,9 @@
+fusion_conda_env = "../envs/fusion.yaml"
+fusions = molecularProfiles['fusion']
 
 rule download_FUSION:
     input:
-        gene_fusions = HTTP.remote(molecularProfiles['fusion']['gene_fusions']['url']),
+        gene_fusions = HTTP.remote(fusions['gene_fusions']['url']),
     output:
         gene_fusions = "rawdata/fusion/Fusions_20230725.zip"
     log:
@@ -19,6 +21,8 @@ rule preprocess_FUSION:
         preprocessed_fusions = "rawdata/fusion/preprocessed_fusions.qs"
     log:
         "logs/fusion/preprocess_FUSION.log"
+    conda:
+        fusion_conda_env
     script:
         "../scripts/fusion/preprocess_FUSION.R"
 
@@ -29,5 +33,7 @@ rule make_FUSION_SE:
         fusion_se = "procdata/fusion/fusion_se.qs"
     log:
         "logs/fusion/make_FUSION_SE.log"
+    conda:
+        fusion_conda_env
     script:
         "../scripts/fusion/make_FUSION_SE.R"

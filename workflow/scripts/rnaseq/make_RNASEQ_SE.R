@@ -1,3 +1,19 @@
+# RULE: make_RNASEQ_SE
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#'  - INPUT$preprocessed
+#' and outputs the following files:
+#' - OUTPUT$rnaseq_se
+#' 
+#' Libraries Used:
+#' - data.table
+#' - GenomicRanges
+#' - log4r
+#' - BiocParallel
+#' - qs
+#' - SummarizedExperiment
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input

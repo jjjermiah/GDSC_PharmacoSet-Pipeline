@@ -38,10 +38,9 @@ molecularProfiles:
         Access to raw cram files requires DAC approval. "
       url: "https://ega-archive.org/datasets/EGAD00001001357"
     processed:
-      all:
-        description: "Read counts, TPM & FPKM-values for all sequenced models 
-          including cell lines and organoids."
-        url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
+      description: "Read counts, TPM & FPKM-values for all sequenced models 
+        including cell lines and organoids."
+      url: "https://cog.sanger.ac.uk/cmp/download/rnaseq_all_20220624.zip"
 
   cnv:
     WES_CNV: 

@@ -1,4 +1,19 @@
 # RULE: preprocess_RNASEQ
+# AUTHOR: Jermiah Joseph
+# DATE: 01-15-2024
+# This script takes in the following files:
+#   - INPUT$metadata
+#   - INPUT$all
+# and outputs the following files:
+#   - OUTPUT$preprocessed
+#
+# Libraries Used:
+#   - data.table
+#   - GenomicRanges
+#   - log4r
+#   - BiocParallel
+#   - qs
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
@@ -29,12 +44,12 @@ metadata <- qs::qread(INPUT$metadata)
 sample <- metadata$sample
 geneAnnot <- metadata$GRanges
 
-# 0.2 read in rnaseq data
+# 0.3 read in rnaseq data
 # -----------------------
-allDir <- paste0(dirname(INPUT$all), "/all")
+allDir <- paste0(dirname(INPUT$processed), "/all")
 dir.create(allDir, recursive = TRUE, showWarnings = FALSE)
-info(paste0("Unzipping ", INPUT$all, " into ", allDir))
-unzip(INPUT$all, exdir = allDir)
+info(paste0("Unzipping ", INPUT$processed, " into ", allDir))
+unzip(INPUT$processed, exdir = allDir)
 
 # list.files(allDir)
 # [1] "rnaseq_all_data_20220624.csv"   "rnaseq_fpkm_20220624.csv"      

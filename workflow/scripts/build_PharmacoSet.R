@@ -1,7 +1,24 @@
+#' RULE: build_PharmacoSet
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#' - INPUT$metadata
+#' - INPUT$summarizedExperiments
+#' and outputs the following files:
+#' - OUTPUT$pset
+#' 
+#' Libraries Used:
+#' - MultiAssayExperiment
+#' - log4r
+#' - BiocParallel
+#' - qs
+#' - SummarizedExperiment
+#' - CoreGx
+#' - PharmacoGx
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 # Check if the "snakemake" object exists
 if(exists("snakemake")){
-    # Extract input, output, wildcards, threads, and log file information from the snakemake object
     INPUT <- snakemake@input
     OUTPUT <- snakemake@output
     WILDCARDS <- snakemake@wildcards
@@ -10,8 +27,7 @@ if(exists("snakemake")){
     save.image()
 }
 
-suppressPackageStartupMessages(library(SummarizedExperiment))
-suppressPackageStartupMessages(library(CoreGx))
+suppressPackageStartupMessages(library(PharmacoGx))
 
 # 0.1 Setup Logger
 # ----------------

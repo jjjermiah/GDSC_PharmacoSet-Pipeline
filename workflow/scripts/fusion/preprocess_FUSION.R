@@ -1,3 +1,20 @@
+#' @title Preprocess FUSION data
+#' RULE: preprocess_FUSION
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#' - INPUT$metadata
+#' - INPUT$gene_fusions
+#' and outputs the following files:
+#' - OUTPUT$preprocessed_fusions
+#' 
+#' Libraries Used:
+#' - data.table
+#' - GenomicRanges
+#' - log4r
+#' - BiocParallel
+#' - qs
+#' 
 
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){

@@ -1,3 +1,19 @@
+#' @title Make SummarizedExperiment object for FUSION
+#' RULE: make_FUSION_SE
+#' AUTHOR: Jermiah Joseph
+#' DATE: 01-15-2024
+#' This script takes in the following files:
+#' - INPUT$preprocessed_fusions
+#' and outputs the following files:
+#' - OUTPUT$fusion_se
+#' 
+#' Libraries Used:
+#' - data.table
+#' - SummarizedExperiment
+#' - log4r
+#' - BiocParallel
+#' - qs
+
 ## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
