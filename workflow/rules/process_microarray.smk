@@ -16,9 +16,9 @@ rule download_MicroArrayMetadata:
         fileList = HTTP.remote(molecularProfiles['microarray']['metadata_json']['url']),
         # tsv = HTTP.remote(molecularProfiles['microarray']['metadata_tsv']['url'])
     output:
-        srdf = "metadata/microarray/E-MTAB-3610.sdrf.txt",
-        filelist = "metadata/microarray/E-MTAB-3610_filelist.json",
-        # tsv = "metadata/microarray/E-MTAB-3610.tsv",
+        srdf = "rawdata/microarray/E-MTAB-3610.sdrf.txt",
+        filelist = "rawdata/microarray/E-MTAB-3610_filelist.json",
+        # tsv = "rawdata/microarray/E-MTAB-3610.tsv",
     shell:
         """
         wget -O {output.srdf} {input.srdf} && \
@@ -29,9 +29,9 @@ rule download_MicroArrayMetadata:
 # The json file is used to download the expression data in downloadExpressionData
 checkpoint load_MicroArrayMetadata:
     input:
-        filelist = "metadata/microarray/E-MTAB-3610_filelist.json",
+        filelist = "rawdata/microarray/E-MTAB-3610_filelist.json",
     output:
-        microarrayFiles = "metadata/microarray/E-MTAB-3610_expressionFiles.json",
+        microarrayFiles = "rawdata/microarray/E-MTAB-3610_expressionFiles.json",
     run:
         import json
         with open(input.filelist) as f:
@@ -70,8 +70,8 @@ def getMicroArrayFiles(wildcards):
 rule preprocess_MicroArray:
     input: 
         CELfiles = getMicroArrayFiles,
-        CEL_metadata = "metadata/microarray/E-MTAB-3610.sdrf.txt",
-        CEL_FileList = "metadata/microarray/E-MTAB-3610_expressionFiles.json",
+        CEL_metadata = "rawdata/microarray/E-MTAB-3610.sdrf.txt",
+        CEL_FileList = "rawdata/microarray/E-MTAB-3610_expressionFiles.json",
     output:
         preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
     threads:

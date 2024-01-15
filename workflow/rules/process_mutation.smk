@@ -6,10 +6,12 @@ rule download_MUTATION_processed:
     output:
         all_mutations = "rawdata/mutation/mutations_all_20230202.zip",
         Genes_Metadata = "rawdata/mutation/driver_mutations_20221208.csv",
+    log:
+        "logs/mutation/download_MUTATION_processed.log",
     shell:
         """
         mv {input.all_mutations} {output.all_mutations} && \
-        mv {input.Genes_Metadata} {output.Genes_Metadata}
+        mv {input.Genes_Metadata} {output.Genes_Metadata} > {log} 2>&1
         """
 
 rule preprocess_MUTATION:
@@ -30,7 +32,7 @@ rule make_MUTATION_SE:
     input:
         preprocessed = rules.preprocess_MUTATION.output.preprocessed,
     output:
-        mutation_se = "procdata/mutation/mutation_SE.qs",
+        mutation_se = "results/data/mutation/mutation_SE.qs",
     log:
         "logs/mutation/make_MUTATION_SE.log",
     script:

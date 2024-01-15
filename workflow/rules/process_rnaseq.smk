@@ -28,7 +28,7 @@ rule make_RNASEQ_SE:
     input:
         preprocessed = rules.preprocess_RNASEQ.output.preprocessed,
     output:
-        rnaseq_se = "procdata/rnaseq/rnaseq_SE.qs"
+        rnaseq_se = "results/data/rnaseq/rnaseq_SE.qs"
     log:     
         "logs/rnaseq/make_RNASEQ_SE.log"
     threads:

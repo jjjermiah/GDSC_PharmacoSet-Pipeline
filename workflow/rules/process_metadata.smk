@@ -19,13 +19,16 @@ rule downloadTreatmentMetadata:
 
 rule downloadCellModelPassportsMetadata:
     input:
-        cellModelPassportsMetadata = HTTP.remote(metadata['cellmodelpassportsAnnootation']),
+        cellModelPassportsMetadata = HTTP.remote(metadata['cellmodelpassportsAnnotation']),
         cellmodelpassportsGeneAnnotation = HTTP.remote(metadata['cellmodelpassportsGeneAnnotation'])
     output:
         cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
         cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
     shell:
-        "mv {input.cellModelPassportsMetadata} {output.cellModelPassportsMetadata} && mv {input.cellmodelpassportsGeneAnnotation} {output.cellmodelpassportsGeneAnnotation}"
+        """
+        mv {input.cellModelPassportsMetadata} {output.cellModelPassportsMetadata} && \
+        mv {input.cellmodelpassportsGeneAnnotation} {output.cellmodelpassportsGeneAnnotation}
+        """
 
 rule preprocess_METADATA:
     input:
@@ -34,7 +37,7 @@ rule preprocess_METADATA:
         cellModelPassportsMetadata = "metadata/cellModelPassportsAnnotation.csv",
         cellmodelpassportsGeneAnnotation = "metadata/cellmodelpassportsGeneAnnotation.csv",
     output:
-        metadata = "procdata/metadata.qs"
+        metadata = "procdata/metadata/metadata.qs"
     script:
         "../scripts/preprocessMetadata.R"
 

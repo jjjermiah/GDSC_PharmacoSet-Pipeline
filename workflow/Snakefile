@@ -15,6 +15,7 @@ include: "rules/process_rnaseq.smk"
 include: "rules/process_mutation.smk"
 include: "rules/process_cnv.smk"
 include: "rules/process_fusion.smk"
+include: "rules/process_methylation.smk"
 
 rule build_PharmacoSet:
     input:
@@ -25,15 +26,11 @@ rule build_PharmacoSet:
             rules.make_FUSION_SE.output.fusion_se,
             rules.make_MUTATION_SE.output.mutation_se
         ]
-        # CNV_SE = rules.make_CNV_SE.output.CNV_se,
-        # rnaseq_SE = rules.make_RNASEQ_SE.output.rnaseq_se,
-        # fusion_SE = rules.make_FUSION_SE.output.fusion_se,
-        # mutation_SE = rules.make_MUTATION_SE.output.mutation_se
-        # preprocessedMicroArray = "procdata/microarray/preprocessedMicroArray.qs",
     output:
         pset = "results/data/PharmacoSet.qs"
     log:
         "logs/build_PharmacoSet.log"
-    threads: 4
+    threads:
+        4
     script:
         "scripts/build_PharmacoSet.R"

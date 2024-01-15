@@ -1,0 +1,6 @@
+snakefile: Snakefile
+cores: 16
+show-failed-logs: True
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
