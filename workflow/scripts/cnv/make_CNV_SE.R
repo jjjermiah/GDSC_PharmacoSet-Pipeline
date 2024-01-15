@@ -65,6 +65,8 @@ colData <- data.frame(
 
 rowRanges <- rowRanges_[rowRanges_$symbol %in% geneids,]
 
+# rowRanges <- rowRanges[!duplicated(rowRanges$symbol),]
+
 rse <- SummarizedExperiment::SummarizedExperiment(
     assays = assays_,
     rowRanges = rowRanges,

@@ -12,8 +12,8 @@ metadata:
 
 referenceGenome:
   Gencode:
-    build: "GRCh37"
-    version: 44
+    build: "GRCh38"
+    version: "44"
   # description: TODO::(add description)
   # url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
 
@@ -83,3 +83,38 @@ molecularProfiles:
     gene_fusions:
       description: TODO::(add description)
       url: "https://cog.sanger.ac.uk/cmp/download/Fusions_20230725.zip"
+
+
+treatmentResponse:
+  8.4:
+    date: "24Jul22"
+    GDSC1:
+      rawdata:
+        description: "The raw data for the GDSC1 release 8.4 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/GDSC1_public_raw_data_24Jul22.csv"
+      processed:
+        description: "The processed data for the GDSC1 release 8.4 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/GDSC1_fitted_dose_response_24Jul22.xlsx"
+    GDSC2:
+      rawdata:
+        description: "The raw data for the GDSC2 release 8.4 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/GDSC2_public_raw_data_24Jul22.csv"
+      processed:
+        description: "The processed data for the GDSC2 release 8.4 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/GDSC2_fitted_dose_response_24Jul22.xlsx"
+  8.5: 
+    date: "27Oct23"
+    GDSC1:
+      rawdata:
+        description: "The raw data for the GDSC1 release 8.5 is available from the GDSC website."
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/GDSC1_public_raw_data_27Oct23.csv"
+      processed:
+        description: "The processed data for the GDSC1 release 8.5 is available from the GDSC website."
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/GDSC1_fitted_dose_response_27Oct23.xlsx"
+    GDSC2:
+      rawdata:
+        description: "The raw data for the GDSC2 release 8.5 is available from the GDSC website."
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/GDSC2_public_raw_data_27Oct23.csv"
+      processed:
+        description: "The processed data for the GDSC2 release 8.5 is available from the GDSC website."
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/GDSC2_fitted_dose_response_27Oct23.xlsx"

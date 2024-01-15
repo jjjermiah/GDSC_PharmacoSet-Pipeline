@@ -108,6 +108,7 @@ GRanges <- GenomicRanges::makeGRangesFromDataFrame(
     df = genes_dt, keep.extra.columns=TRUE, na.rm = T,
     start.field = "start", end.field = "end", seqnames.field = "seqnames")
 
+GRanges <- GRanges[!duplicated(GRanges$symbol), ]
 
 outputFiles <- list(
     "sample" = sampleMetadata,
