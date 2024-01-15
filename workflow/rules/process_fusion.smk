@@ -4,8 +4,12 @@ rule download_FUSION:
         gene_fusions = HTTP.remote(molecularProfiles['fusion']['gene_fusions']['url']),
     output:
         gene_fusions = "rawdata/fusion/Fusions_20230725.zip"
+    log:
+        "logs/fusion/download_FUSION.log"
     shell:
-        "mv {input.gene_fusions} {output.gene_fusions}"
+        """
+        mv {input.gene_fusions} {output.gene_fusions} > {log} 2>&1
+        """
 
 rule preprocess_FUSION:
     input:

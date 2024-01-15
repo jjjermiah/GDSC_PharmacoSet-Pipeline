@@ -1,4 +1,4 @@
-merged_dt[, -1], rownames = merged_dt$symbol)## ------------------- Parse Snakemake Object ------------------- ##
+## ------------------- Parse Snakemake Object ------------------- ##
 if(exists("snakemake")){
     INPUT <- snakemake@input
     OUTPUT <- snakemake@output
@@ -6,7 +6,7 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    # save.image()
+    save.image()
 }
 
 library(data.table, quietly = TRUE)

@@ -30,7 +30,7 @@ rule build_PharmacoSet:
         pset = "results/data/PharmacoSet.qs"
     log:
         "logs/build_PharmacoSet.log"
-    threads: 
+    threads:
         4
     script:
         "scripts/build_PharmacoSet.R"

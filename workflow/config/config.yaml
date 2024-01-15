@@ -1,7 +1,13 @@
+PharmacoSet:
+  description: "The Genomics of Drug Sensitivity in Cancer (GDSC) is ...
+    This dataset contains molecular profiles for 1,000 cancer cell lines, 
+    and drug sensitivity data against a wide range of anti-cancer therapeutics."
+  url: "https://www.cancerrxgene.org/"
+
 metadata:
   sampleAnnotation: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/Cell_Lines_Details.xlsx"
   treatmentAnnotation: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/screened_compounds_rel_8.5.csv"
-  cellmodelpassportsAnnootation: "https://cog.sanger.ac.uk/cmp/download/model_list_20230923.csv"
+  cellmodelpassportsAnnotation: "https://cog.sanger.ac.uk/cmp/download/model_list_20230923.csv"
   cellmodelpassportsGeneAnnotation: "https://cog.sanger.ac.uk/cmp/download/gene_identifiers_20191101.csv"
 
 referenceGenome:
@@ -10,7 +16,6 @@ referenceGenome:
 
 
 molecularProfiles:
-
   microarray:
     description: "Data taken from https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-3610/." 
     metadata_tsv: 
@@ -58,6 +63,7 @@ molecularProfiles:
       url: "https://cog.sanger.ac.uk/cmp/download/driver_mutations_20221208.csv"
 
   methylation:
+    description: "Not implemented yet."
     processed: 
       description: TODO::(add description)
       url: 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE68nnn/GSE68379/suppl/GSE68379_Matrix.processed.txt.gz'

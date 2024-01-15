@@ -15,15 +15,43 @@
       - Need to unzip rawdata within preprocessing instead
   - fusion : need pre-processing
   - mutation : pre-processing DONE
-  - microarray : need pre-processing
+ - microarray : need pre-processing
 - TODO:: create conda environments + docker images for each rule and use them in the pipeline
   
+# Molecular Profiles
+
+- rnaseq 
+- mutation
+- cnv
+- fusion 
+- microarray (not yet implemented)
+
+# SETUP AND EXECUTION
+
+This pipeline has a snakemake profile set up at `workflow/profiles/`. 
+This profile helps to remove the need to specify options at the command line.
+To use this profile, set the environment variable:
+``` bash
+export SNAKEMAKE_PROFILE="workflow/profiles"
+```
+Now to run the pipeline, simply run:
+
+``` bash
+snakemake
+```
+# creating the workflow DAG
 
 ``` bash
 snakemake \
   --snakefile workflow/Snakefile \
   --rulegraph | dot -Tsvg > resources/rulegraph.svg
 ```
+
+
+
+### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
+![pipeline status](resources/rulegraph.svg)
+
 
 # MultiAssayExperiment Subsetting
 ``` R
@@ -32,6 +60,3 @@ mae[rowRanges(mae@ExperimentList[[1]]),] -> r
 MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
 
 ```
-
-### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
-![pipeline status](resources/rulegraph.svg)

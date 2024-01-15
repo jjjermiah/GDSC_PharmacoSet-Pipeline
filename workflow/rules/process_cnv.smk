@@ -16,8 +16,13 @@ rule downloadCNV_WESData:
         WES_genes = "rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv",
         WES_category = "rawdata/cnv/WES_pureCN_CNV_genes_cn_category_20221213.csv",
         WES_total_cnv = "rawdata/cnv/WES_pureCN_CNV_genes_total_copy_number_20221213.csv",
+    log:
+        "logs/cnv/downloadCNV_WESData.log"
     shell:
-        "unzip -d $(dirname {output.WES_genes}) {input.WES}; rm {input.WES}"
+        """
+        unzip -d $(dirname {output.WES_genes}) {input.WES} && \
+        rm {input.WES} > {log} 2>&1
+        """
 
 rule preprocess_CNV:
     input:
@@ -38,7 +43,7 @@ rule make_CNV_SE:
     input:
         preprocessedCNV = rules.preprocess_CNV.output.preprocessedCNV,
     output:
-        CNV_se = "procdata/cnv/CNV_SE.qs",
+        CNV_se = "results/data/cnv/CNV_SE.qs",
     log:
         "logs/cnv/make_CNV_SE.log",
     script:

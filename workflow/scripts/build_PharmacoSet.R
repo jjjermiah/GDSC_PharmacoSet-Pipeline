@@ -12,6 +12,7 @@ if(exists("snakemake")){
 
 suppressPackageStartupMessages(library(SummarizedExperiment))
 suppressPackageStartupMessages(library(CoreGx))
+
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode
@@ -22,13 +23,24 @@ logger <- log4r::logger(
 info <- function(msg) log4r::info(logger, msg)
 info("Starting build_PharmacoSet.R\n")
 
+
+# 0.2 Read in the metadata
+# --------------------------
+info(paste("Loading: ", INPUT$metadata, sep = "\n\t"))
+metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
+
+
+# 0.3 Read in the summarized experiments
+# --------------------------------------
 # Read the summarized experiments
 info(paste("Loading: ", INPUT$summarizedExperiments, sep = "\n\t"))
 se_list <- unlist(lapply(INPUT$summarizedExperiments, qs::qread, nthreads = THREADS))
 
+
+# 1.0 Build MultiAssayExperiment
+# ------------------------------
 # Extract unique sample IDs from the summarized experiments
 sampleids_all <- lapply(se_list, colnames)
-
 
 info(paste(
     "Number of samples in each experiment:\n", 
@@ -36,7 +48,20 @@ info(paste(
     sep = ""))
 
 sampleid <- unique(unlist(sampleids_all))
-sample <- data.frame(sampleid, row.names = sampleid)
+sample <- metadata$sample
+# Check that all samples are in the metadata
+stopifnot(all(sampleid %in% sample$sampleid))
+# Subset the metadata to only include samples in the summarized experiments
+sample <- sample[sample$sampleid %in% sampleid, ]
+
+# Remove duplicate sample IDs
+sample <- sample[!duplicated(sample$sampleid), ]
+
+# convert sample into a data frame with the rownames being the sample IDs
+# and ordered by the sample IDs
+sample <- data.frame(sample, row.names = sample$sampleid)
+sample <- sample[order(rownames(sample)), ]
+
 info(sprintf("Total number of samples across all experiments: %d", nrow(sample)))
 
 # Create a data frame for the column data, including sample IDs and batch IDs
@@ -74,17 +99,6 @@ mae <- MultiAssayExperiment::MultiAssayExperiment(
 )
 info(paste("MultiAssayExperiment:\n", capture.output(show(mae)), sep = ""))
 
-# PharmacoSet2(
-#        name = "emptySet",
-#        treatment = data.frame(),
-#        sample = data.frame(),
-#        molecularProfiles = MultiAssayExperiment(),
-#        treatmentResponse = TreatmentResponseExperiment(),
-#        perturbation = list(),
-#        curation = list(sample = data.frame(), treatment = data.frame(), tissue = data.frame()),
-#        datasetType = "sensitivity"
-#      )
-# save.image()
 
 # make fake tre
 filePath <- system.file('extdata', 'merckLongTable.csv', package='CoreGx',
