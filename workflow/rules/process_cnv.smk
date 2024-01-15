@@ -2,7 +2,7 @@ cnv_conda_env = "../envs/cnv.yaml"
 cnv = molecularProfiles['cnv']
 
 
-rule downloadCNV_WESData:
+rule download_CNV_WESData:
     input:
         WES = HTTP.remote(cnv['WES_CNV']['url'])
     output:
