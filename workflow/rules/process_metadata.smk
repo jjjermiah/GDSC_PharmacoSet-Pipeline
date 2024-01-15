@@ -39,6 +39,6 @@ rule preprocess_METADATA:
     output:
         metadata = "procdata/metadata/metadata.qs"
     script:
-        "../scripts/preprocessMetadata.R"
+        "../scripts/metadata/preprocessMetadata.R"
 
 
