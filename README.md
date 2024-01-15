@@ -39,6 +39,7 @@ Now to run the pipeline, simply run:
 ``` bash
 snakemake
 ```
+
 # creating the workflow DAG
 
 ``` bash
@@ -48,6 +49,56 @@ snakemake \
 ```
 ### The following dag shows the pipeline steps, though the steps are not implemented for all. see TODOs above.
 ![pipeline status](resources/rulegraph.svg)
+
+# Workflow Directory
+The workflow directory is structured as follows:
+
+``` bash
+workflow/
+├── config
+│   └── config.yaml
+├── envs
+│   ├── cnv.yaml
+│   ├── fusion.yaml
+│   ├── microarray.yaml
+│   ├── mutation.yaml
+│   ├── PharmacoSet.yaml
+│   ├── rnaseq.yaml
+│   └── test.yaml
+├── profiles
+│   └── config.yaml
+├── rules
+│   ├── process_cnv.smk
+│   ├── process_fusion.smk
+│   ├── process_metadata.smk
+│   ├── process_methylation.smk
+│   ├── process_microarray.smk
+│   ├── process_mutation.smk
+│   └── process_rnaseq.smk
+├── scripts
+│   ├── cnv
+│   │   ├── make_CNV_SE.R
+│   │   └── preprocess_CNV.R
+│   ├── fusion
+│   │   ├── make_FUSION_SE.R
+│   │   └── preprocess_FUSION.R
+│   ├── metadata
+│   │   └── preprocessMetadata.R
+│   ├── methylation
+│   │   └── preprocess_METHYLATION.R
+│   ├── microarray
+│   │   └── preprocess_MICROARRAY.R
+│   ├── mutation
+│   │   ├── make_MUTATION_SE.R
+│   │   └── preprocess_MUTATION.R
+│   ├── pharmacoset
+│   │   ├── build_PharmacoSet.R
+│   │   └── GDSC_PharmacoSet.Rmd
+│   └── rnaseq
+│       ├── make_RNASEQ_SE.R
+│       └── preprocess_RNASEQ.R
+└── Snakefile
+```
 
 
 # MultiAssayExperiment Subsetting
