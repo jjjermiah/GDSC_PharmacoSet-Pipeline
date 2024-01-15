@@ -35,4 +35,4 @@ rule build_PharmacoSet:
     threads:
         4
     script:
-        "scripts/build_PharmacoSet.R"
+        "scripts/pharmacoset/build_PharmacoSet.R"
