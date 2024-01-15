@@ -11,8 +11,11 @@ metadata:
   cellmodelpassportsGeneAnnotation: "https://cog.sanger.ac.uk/cmp/download/gene_identifiers_20191101.csv"
 
 referenceGenome:
-  description: TODO::(add description)
-  url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
+  Gencode:
+    build: "GRCh37"
+    version: 44
+  # description: TODO::(add description)
+  # url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
 
 
 molecularProfiles:

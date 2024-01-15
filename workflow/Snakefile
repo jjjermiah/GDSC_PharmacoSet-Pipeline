@@ -2,6 +2,8 @@
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 import json
 import pandas as pd
+from pathlib import Path
+
 HTTP = HTTPRemoteProvider()
 
 
@@ -36,3 +38,5 @@ rule build_PharmacoSet:
         4
     script:
         "scripts/pharmacoset/build_PharmacoSet.R"
+
+
