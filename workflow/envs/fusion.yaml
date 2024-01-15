@@ -8,7 +8,5 @@ dependencies:
   - r-qs=0.25
   - r-log4r=0.4.3
   - bioconductor-biocparallel=1.36.0
-  - bioconductor-VariantExperiment=1.16.0
   - bioconductor-genomicranges=1.54.1
-  - bioconductor-variantannotation=1.48.1
   - bioconductor-summarizedexperiment=1.32.0
