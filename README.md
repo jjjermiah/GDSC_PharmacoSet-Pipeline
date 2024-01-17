@@ -16,6 +16,7 @@
   - fusion : need pre-processing
   - mutation : pre-processing DONE
  - microarray : need pre-processing
+ - SUMMARIZEDEXPERIMENTS NEED $annotation slot filled for PharmacoGx::summarizeMolecularProfiles
 - TODO:: create conda environments + docker images for each rule and use them in the pipeline
   
 # Molecular Profiles

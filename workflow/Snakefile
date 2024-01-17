@@ -28,7 +28,12 @@ rule build_PharmacoSet:
             rules.make_RNASEQ_SE.output.rnaseq_se,
             rules.make_FUSION_SE.output.fusion_se,
             rules.make_MUTATION_SE.output.mutation_se
-        ]
+        ],
+        tre = expand(
+            "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment.qs",
+            dataset = ["GDSC2"],
+            release = [8.5] # [8.2, 8.4, 8.5]
+        )
     output:
         pset = "results/data/PharmacoSet.qs"
     log:

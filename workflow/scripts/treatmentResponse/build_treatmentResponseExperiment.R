@@ -7,7 +7,7 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    save.image()
+    # save.image()
 }
 
 suppressPackageStartupMessages(library(data.table, quietly = TRUE))
@@ -53,10 +53,9 @@ rawdata[, TAG.1 := sapply(strsplit(TAG, split = "-"), function(x) {
   return(x[[1]])
 })]
 
-rawdata
 
 ## Taking mean if more than 5 measurements, otherwise median
-control.column <- "NC-1"
+control.column <- c("NC-0", "NC-1")
 # Calculate viability based on intensity values
 # Parameters:
 #   - rawdata: The input data table
@@ -72,44 +71,111 @@ rawdata[, Viability := {
   list(Viability = Viability)
 }, .(MASTER_CELL_ID, BARCODE)]
 
-# NEED TO DO TRE DATA MAPPING! 
+rawdata <- merge(rawdata, treatment[,.(DRUG_ID, DRUG_NAME)], by = "DRUG_ID", all.x = T)
+
+# FOR NOW, REMOVE ALL ROWS WHERE DRUG_NAME HAS A PUNCTUATION OR SPACE
+rawdata <- rawdata[!grepl("[[:punct:]]", DRUG_NAME) & !grepl(" ", DRUG_NAME)]
+# TODO:: WHEN MAPPING TREATMENTS, CLEAN NAMES!!
 
 
-# groups <- list(
-#   justDrugs=c('drug1id', 'drug2id'),
-#   drugsAndDoses=c('drug1id', 'drug2id', 'drug1dose', 'drug2dose'),
-#   justCells=c('cellid'),
-#   cellsAndBatches=c('cellid', 'batchid'),
-#   assays1=c('drug1id', 'drug2id', 'cellid'),
-#   assays2=c('drug1id', 'drug2id', 'drug1dose', 'drug2dose', 'cellid', 'batchid')
-# )
-
-
-colnames(rawdata)
+### INVESTIGATE RAWDATA ###
 # [1] "RESEARCH_PROJECT" "BARCODE"          "SCAN_ID"          "DATE_CREATED"    
 #  [5] "SCAN_DATE"        "CELL_ID"          "MASTER_CELL_ID"   "COSMIC_ID"       
 #  [9] "CELL_LINE_NAME"   "SANGER_MODEL_ID"  "SEEDING_DENSITY"  "DRUGSET_ID"      
 # [13] "ASSAY"            "DURATION"         "POSITION"         "TAG"             
 # [17] "DRUG_ID"          "CONC"             "INTENSITY"        "TAG.1"           
 
-# get count of rows for each cell line sorted
-rawdata[, .N, by = CELL_LINE_NAME][order(-N)]
+# # get count of rows for each cell line sorted
+# rawdata[, .N, by = CELL_LINE_NAME][order(-N)]
 
-# get count of rows for each drug sorted
-rawdata[, .N, by = DRUG_ID][order(-N)]
+# # get count of rows for each drug sorted
+# rawdata[, .N, by = DRUG_ID][order(-N)]
 
-# get count of each "TAG" sorted
-rawdata[, .N, by = TAG][order(-N)]
+# # get count of each "TAG" sorted
+# rawdata[, .N, by = TAG][order(-N)]
 
-rawDT <- rawdata[, .(
-  CELL_LINE_NAME, SANGER_MODEL_ID, 
-  DRUG_ID, SEEDING_DENSITY, ASSAY, DURATION,
-  TAG.1, CONC, INTENSITY)]
-rawDT
-unique(rawDT)
-groups <- list(
-  justDrugs = c("DRUG_ID"),
-)
+# #  sort this: rawdata[, .N, by = TAG][order(-N)]$TAG
+# rawdata[, .N, by = CONC][order(-CONC)][1:10]
+
+###############################################
+# 2.0 Constructing the Experiment
+###############################################
+rawDT <- rawdata[!is.na(DRUG_NAME), .(
+  CELL_LINE_NAME, DRUG_NAME, 
+  BARCODE, SEEDING_DENSITY, ASSAY, DURATION, CONC, Viability)]
+
+# create a new column using SEEDING_DENSITY, BARCODE, DURATION, ASSAY
+rawDT[, EXPERIMENT := paste("seed", SEEDING_DENSITY, "barcode", BARCODE, "dur", DURATION, "assay", ASSAY, sep = "_")]
+# drop the constituent columns
+rawDT[, c("SEEDING_DENSITY", "BARCODE", "DURATION", "ASSAY") := NULL]
+
+runtre <- function(){
+  subset_rawDT <- 
+    rawDT[CELL_LINE_NAME %in% unique(rawDT$CELL_LINE_NAME)[1:250],]
+  # # (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
+  TREdataMapper <- CoreGx::TREDataMapper(rawdata=subset_rawDT)
+
+  CoreGx::rowDataMap(TREdataMapper) <- list(
+    # id_columns = c("DRUG_NAME",  "CONC", "SEEDING_DENSITY", "BARCODE", "ASSAY", "DURATION"),
+    id_columns = c("DRUG_NAME", "EXPERIMENT", "CONC"),
+    mapped_columns = c()
+  )
+
+  CoreGx::colDataMap(TREdataMapper) <- list(
+    id_columns = c("CELL_LINE_NAME"),
+    mapped_columns = c()
+  )
+
+  CoreGx::assayMap(TREdataMapper) <- list(
+    raw = list(
+      # c("DRUG_NAME",  "CELL_LINE_NAME", "CONC", "SEEDING_DENSITY", "BARCODE", "ASSAY", "DURATION"),
+      c("DRUG_NAME", "EXPERIMENT", "CELL_LINE_NAME", "CONC"),
+      c("Viability")
+    )
+  )
+
+  gdsc_tre <- CoreGx::metaConstruct(TREdataMapper)
+  gdsc_tre
+}
+devtools::load_all("/home/bioinf/bhklab/jermiah/Bioconductor/CoreGx/")
+tre <- runtre()
+
+qs::qsave(tre, OUTPUT$tre, nthreads = THREADS)
 
 
-# (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
+# tre_list <- lapply(unique(rawDT$CELL_LINE_NAME)[1:2], function(x){
+#   subset_rawDT <- rawDT[CELL_LINE_NAME == x]
+#   # # (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
+#   TREdataMapper <- CoreGx::TREDataMapper(rawdata=subset_rawDT)
+
+#   CoreGx::rowDataMap(TREdataMapper) <- list(
+#     id_columns = (c("DRUG_NAME", "BARCODE", "CONC", "SEEDING_DENSITY", "ASSAY", "DURATION")),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::colDataMap(TREdataMapper) <- list(
+#     id_columns = c("CELL_LINE_NAME"),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::assayMap(TREdataMapper) <- list(
+#     raw = list(
+#       c("DRUG_NAME", "BARCODE", "CONC", "SEEDING_DENSITY", "ASSAY", "DURATION", "CELL_LINE_NAME"),
+#       c("Viability")
+#     )
+#   )
+
+#   gdsc_tre <- CoreGx::metaConstruct(TREdataMapper)
+#   gdsc_tre
+# })
+# tre_list
+
+# lapply(tre_list, function(x){
+#   rowData_ <- CoreGx::rowData(x)
+#   colData_ <- CoreGx::colData(x)
+#   x@.intern
+# })
+
+# # guess <- CoreGx::guessMapping(TREdataMapper, groups, subsets)
+# # guess
+
