@@ -61,7 +61,7 @@ rule build_treatmentResponseExperiment:
         64
     resources:
         # 64GB of memory
-        mem_mb = 64000
+        mem_mb = 60000
     script:
         "../scripts/treatmentResponse/build_treatmentResponseExperiment.R"
 
