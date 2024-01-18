@@ -25,57 +25,160 @@ logger <- log4r::logger(
 info <- function(msg) log4r::info(logger, msg)
 info("Starting build_treatmentResponseExperiment.R\n")
 
-# 0.2 read in treatmentResponse data
-# ----------------------------------
-info(paste0("Reading in: ", INPUT$rawdata))
-rawdata <- data.table::fread(INPUT$rawdata)
-info(paste0(capture.output(str(rawdata)), collapse = "\n"))
-info(paste0("Number of unique cell lines: ", uniqueN(rawdata$CELL_LINE_NAME)))
-info(paste0("Number of unique drugs: ", uniqueN(rawdata$DRUG_ID), "\n\n"))
+# 0.2 Load Data
+# -------------
 
-info(paste0("Reading in: ", INPUT$processed))
-data <- readxl::read_xlsx(INPUT$processed)
-data <- data.table::as.data.table(data)
-info(paste0(capture.output(str(data)), collapse = "\n"))
-info(paste0("Number of unique cell lines: ", uniqueN(data$CELL_LINE_NAME)))
-info(paste0("Number of unique drugs: ", uniqueN(data$DRUG_ID), "\n\n"))
+input <- qs::qread(INPUT$preprocessed, nthreads = THREADS)
 
-# 0.3 read in metadata 
-# --------------------
-info(paste0("Reading in: ", INPUT$metadata))
-metadata <- qs::qread(INPUT$metadata)
-treatment <- metadata$treatment
+rawdata <- input$rawdata
+fitted_data <- input$fitted_data
+normData <- input$normData
+metadata <- input$metadata
+
+info(paste0(c("rawdata:\n", capture.output(str(rawdata))), collapse = "\n"))
+info(paste0(c("fitted_data:\n", capture.output(str(fitted_data))), collapse = "\n"))
+info(paste0(c("normData:\n", capture.output(str(normData))), collapse = "\n"))
+info(paste0(c("metadata:\n", capture.output(str(metadata))), collapse = "\n"))
 
 # 1.0 Subsetting Data
 # -------------------
+info(paste0("Subsetting normData to not include missing values"))
+proc_data <- unique(normData[
+  !is.na(normalized_intensity) & 
+    !is.na(DRUG_NAME) & 
+    !is.na(CONC) & 
+    !is.na(CELL_LINE_NAME), 
+  .(CELL_LINE_NAME, DRUG_NAME, CONC, Viability = normalized_intensity)])
 
-rawdata[, TAG.1 := sapply(strsplit(TAG, split = "-"), function(x) {
-  return(x[[1]])
-})]
+
+subsetted_samples <- unique(proc_data$CELL_LINE_NAME)
+info(paste0("Subsetting proc_data to only have n = ", length(subsetted_samples), " samples"))
+subset_procdata <- proc_data[CELL_LINE_NAME %in% subsetted_samples,]
+subset_procdata <- subset_procdata[order(CELL_LINE_NAME, DRUG_NAME, CONC)]
+
+subset_fitted_data <- unique(
+  fitted_data[
+    CELL_LINE_NAME %in% subsetted_samples &
+      DRUG_NAME %in% subset_procdata$DRUG_NAME, 
+    .(CELL_LINE_NAME, DRUG_NAME, LN_IC50, AUC, RMSE, Z_SCORE)])
 
 
-## Taking mean if more than 5 measurements, otherwise median
-control.column <- c("NC-0", "NC-1")
-# Calculate viability based on intensity values
-# Parameters:
-#   - rawdata: The input data table
-#   - control.column: The column name for the control condition
-# Returns:
-#   - A modified data table with a new column "Viability" containing the calculated viability values
+info(paste0("Loading TREDataMapper"))
+TREDataMapper <- CoreGx::TREDataMapper(rawdata=subset_procdata)
+{
+  CoreGx::rowDataMap(TREDataMapper) <- list(
+    id_columns = (c("DRUG_NAME", "CONC")),
+    mapped_columns = c())
 
-# Calculate viability based on intensity values
-rawdata[, Viability := {
-  control <- .SD[TAG == ..control.column, ifelse(length(INTENSITY) > 5, mean(INTENSITY), median(INTENSITY))]
-  background <- .SD[TAG.1 == "B", ifelse(length(INTENSITY) > 5, mean(INTENSITY), median(INTENSITY))]
-  Viability <- (INTENSITY - background) / (control - background) * 100
-  list(Viability = Viability)
-}, .(MASTER_CELL_ID, BARCODE)]
+  CoreGx::colDataMap(TREDataMapper) <- list(
+    id_columns = c("CELL_LINE_NAME"),
+    mapped_columns = c())
 
-rawdata <- merge(rawdata, treatment[,.(DRUG_ID, DRUG_NAME)], by = "DRUG_ID", all.x = T)
+  CoreGx::assayMap(TREDataMapper) <- list(
+    raw = list(
+      c("DRUG_NAME", "CONC", "CELL_LINE_NAME"),
+      c("Viability")))
 
-# FOR NOW, REMOVE ALL ROWS WHERE DRUG_NAME HAS A PUNCTUATION OR SPACE
-rawdata <- rawdata[!grepl("[[:punct:]]", DRUG_NAME) & !grepl(" ", DRUG_NAME)]
-# TODO:: WHEN MAPPING TREATMENTS, CLEAN NAMES!!
+  info(paste0(capture.output(TREDataMapper), collapse = "\n"))
+  # devtools::load_all("/home/bioinf/bhklab/jermiah/Bioconductor/CoreGx/")
+  devtools::install_github("bhklab/CoreGx", ref = "devel")
+  gdsc_tre <- CoreGx::metaConstruct(TREDataMapper)
+  tre <- gdsc_tre
+}
+
+info(paste0(capture.output(tre), collapse = "\n"))
+published.profiles <- subset_fitted_data[
+  CELL_LINE_NAME %in% tre$raw$CELL_LINE_NAME & 
+    DRUG_NAME %in% tre$raw$DRUG_NAME,]
+
+info(paste0("Adding published profiles to tre"))
+assay(tre, "profiles.published") <- published.profiles
+info(paste0(capture.output(tre), collapse = "\n"))
+
+info("Endoaggregating tre with recomputed profiles")
+tre_fit <- tre |>
+    endoaggregate(
+        {  # the entire code block is evaluated for each group in our group by
+            # 1. fit a log logistic curve over the dose range
+            fit <- PharmacoGx::logLogisticRegression(CONC, Viability,
+                viability_as_pct=FALSE)
+            # 2. compute curve summary metrics
+            ic50 <- PharmacoGx::computeIC50(CONC, Hill_fit=fit)
+            aac <- PharmacoGx::computeAUC(CONC, Hill_fit=fit)
+            # 3. assemble the results into a list, each item will become a
+            #   column in the target assay.
+            list(
+                HS=fit[["HS"]],
+                E_inf = fit[["E_inf"]],
+                EC50 = fit[["EC50"]],
+                Rsq=as.numeric(unlist(attributes(fit))),
+                aac_recomputed=aac,
+                ic50_recomputed=ic50
+            )
+        },
+        assay="raw",
+        target="profiles.recomputed",
+        enlist=FALSE,  # this option enables the use of a code block for aggregation
+        by=c("DRUG_NAME", "CELL_LINE_NAME"),
+        nthread=THREADS  # parallelize over multiple cores to speed up the computation
+)
+info(paste0(capture.output(tre_fit), collapse = "\n"))
+
+
+info(paste0("Saving tre to: ", OUTPUT$tre))
+qs::qsave(tre_fit, OUTPUT$tre, nthreads = THREADS)
+
+
+# tre_list <- lapply(unique(proc_data$CELL_LINE_NAME)[1:2], function(x){
+#   subset_rawDT <- proc_data[CELL_LINE_NAME == x]
+#   # # (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
+#   TREdataMapper <- CoreGx::TREDataMapper(rawdata=subset_rawDT)
+
+#   CoreGx::rowDataMap(TREdataMapper) <- list(
+#     id_columns = (c("DRUG_NAME", "CONC")),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::colDataMap(TREdataMapper) <- list(
+#     id_columns = c("CELL_LINE_NAME"),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::assayMap(TREdataMapper) <- list(
+#     raw = list(
+#       c("DRUG_NAME", "CONC"),
+#       c("Viability")
+#     )
+#   )
+
+#   gdsc_tre <- CoreGx::metaConstruct(TREdataMapper)
+#   gdsc_tre
+# })
+# tre_list
+
+# rawdata_2 <- removeMissingDrugs(rawdata_1)
+
+# normalized_dt <- normalizeData(rawdata_2, trim=T, neg_control="NC-1", pos_control="B")
+# setConcsForNlme(normalized_dt, group_conc_ranges = F)
+
+
+# rawdata[, TAG.1 := sapply(strsplit(TAG, split = "-"), function(x) {
+#   return(x[[1]])
+# })]
+
+# ## Taking mean if more than 5 measurements, otherwise median
+# control.column <- c("NC-0", "NC-1")
+
+# # Calculate viability based on intensity values
+# rawdata[, Viability := {
+#   control <- .SD[TAG == ..control.column, ifelse(length(INTENSITY) > 5, mean(INTENSITY), median(INTENSITY))]
+#   background <- .SD[TAG.1 == "B", ifelse(length(INTENSITY) > 5, mean(INTENSITY), median(INTENSITY))]
+#   Viability <- (INTENSITY - background) / (control - background) * 100
+#   list(Viability = Viability)
+# }, .(MASTER_CELL_ID, BARCODE)]
+
+# 
+
 
 
 ### INVESTIGATE RAWDATA ###
@@ -97,50 +200,9 @@ rawdata <- rawdata[!grepl("[[:punct:]]", DRUG_NAME) & !grepl(" ", DRUG_NAME)]
 # #  sort this: rawdata[, .N, by = TAG][order(-N)]$TAG
 # rawdata[, .N, by = CONC][order(-CONC)][1:10]
 
-###############################################
-# 2.0 Constructing the Experiment
-###############################################
-rawDT <- rawdata[!is.na(DRUG_NAME), .(
-  CELL_LINE_NAME, DRUG_NAME, 
-  BARCODE, SEEDING_DENSITY, ASSAY, DURATION, CONC, Viability)]
+# Number unique "SEEDING_DENSITY" and "BARCODE" for each "DRUGSET_ID"
 
-# create a new column using SEEDING_DENSITY, BARCODE, DURATION, ASSAY
-rawDT[, EXPERIMENT := paste("seed", SEEDING_DENSITY, "barcode", BARCODE, "dur", DURATION, "assay", ASSAY, sep = "_")]
-# drop the constituent columns
-rawDT[, c("SEEDING_DENSITY", "BARCODE", "DURATION", "ASSAY") := NULL]
 
-runtre <- function(){
-  subset_rawDT <- 
-    rawDT[CELL_LINE_NAME %in% unique(rawDT$CELL_LINE_NAME)[1:250],]
-  # # (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
-  TREdataMapper <- CoreGx::TREDataMapper(rawdata=subset_rawDT)
-
-  CoreGx::rowDataMap(TREdataMapper) <- list(
-    # id_columns = c("DRUG_NAME",  "CONC", "SEEDING_DENSITY", "BARCODE", "ASSAY", "DURATION"),
-    id_columns = c("DRUG_NAME", "EXPERIMENT", "CONC"),
-    mapped_columns = c()
-  )
-
-  CoreGx::colDataMap(TREdataMapper) <- list(
-    id_columns = c("CELL_LINE_NAME"),
-    mapped_columns = c()
-  )
-
-  CoreGx::assayMap(TREdataMapper) <- list(
-    raw = list(
-      # c("DRUG_NAME",  "CELL_LINE_NAME", "CONC", "SEEDING_DENSITY", "BARCODE", "ASSAY", "DURATION"),
-      c("DRUG_NAME", "EXPERIMENT", "CELL_LINE_NAME", "CONC"),
-      c("Viability")
-    )
-  )
-
-  gdsc_tre <- CoreGx::metaConstruct(TREdataMapper)
-  gdsc_tre
-}
-devtools::load_all("/home/bioinf/bhklab/jermiah/Bioconductor/CoreGx/")
-tre <- runtre()
-
-qs::qsave(tre, OUTPUT$tre, nthreads = THREADS)
 
 
 # tre_list <- lapply(unique(rawDT$CELL_LINE_NAME)[1:2], function(x){
@@ -178,4 +240,44 @@ qs::qsave(tre, OUTPUT$tre, nthreads = THREADS)
 
 # # guess <- CoreGx::guessMapping(TREdataMapper, groups, subsets)
 # # guess
+
+
+
+
+# tre_list <- lapply(unique(rawDT$CELL_LINE_NAME)[1:2], function(x){
+#   subset_rawDT <- rawDT[CELL_LINE_NAME == x]
+#   # # (rawControl <- rawdata[TAG.1 == control.column, .(INTENSITY)])
+#   TREdataMapper <- CoreGx::TREDataMapper(rawdata=subset_rawDT)
+
+#   CoreGx::rowDataMap(TREdataMapper) <- list(
+#     id_columns = (c("DRUG_NAME", "BARCODE", "CONC", "SEEDING_DENSITY", "ASSAY", "DURATION")),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::colDataMap(TREdataMapper) <- list(
+#     id_columns = c("CELL_LINE_NAME"),
+#     mapped_columns = c()
+#   )
+
+#   CoreGx::assayMap(TREdataMapper) <- list(
+#     raw = list(
+#       c("DRUG_NAME", "BARCODE", "CONC", "SEEDING_DENSITY", "ASSAY", "DURATION", "CELL_LINE_NAME"),
+#       c("Viability")
+#     )
+#   )
+
+#   gdsc_tre <- CoreGx::metaConstruct(TREdataMapper)
+#   gdsc_tre
+# })
+# tre_list
+
+# lapply(tre_list, function(x){
+#   rowData_ <- CoreGx::rowData(x)
+#   colData_ <- CoreGx::colData(x)
+#   x@.intern
+# })
+
+# # guess <- CoreGx::guessMapping(TREdataMapper, groups, subsets)
+# # guess
+
 

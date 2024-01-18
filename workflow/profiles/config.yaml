@@ -1,5 +1,5 @@
 snakefile: "../Snakefile"
-cores: 16
+cores: 32
 show-failed-logs: True
 keep-going: True
 rerun-incomplete: True

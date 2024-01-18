@@ -31,13 +31,14 @@ rule build_PharmacoSet:
         ],
         tre = expand(
             "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment.qs",
-            dataset = ["GDSC2"],
-            release = [8.5] # [8.2, 8.4, 8.5]
+            dataset = "GDSC1", #["GDSC2", "GDSC1"],
+            release = 8.5 #[8.4, 8.5] # [8.2, 8.4, 8.5]
         )
     output:
         pset = "results/data/PharmacoSet.qs"
     log:
         "logs/build_PharmacoSet.log"
+    threads: 16
     conda:
         "envs/PharmacoSet.yaml"
     threads:
