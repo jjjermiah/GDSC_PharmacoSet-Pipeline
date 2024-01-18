@@ -7,19 +7,24 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    # save.image()
+    save.image()
 }
 
 suppressPackageStartupMessages(library(data.table, quietly = TRUE))
-suppressPackageStartupMessages(library(CoreGx))
+suppressPackageStartupMessages(library(PharmacoGx))
 suppressPackageStartupMessages(library(GenomicRanges))
 
+suppressMessages(suppressWarnings(devtools::install_github("bhklab/CoreGx", quiet = TRUE)))
 
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode
 logger <- log4r::logger(
-    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+    appenders = list(
+      log4r::file_appender(LOGFILE, append = TRUE),
+      log4r::console_appender()
+    )
+)
 
 # make a function to easily log messages to the logger
 info <- function(msg) log4r::info(logger, msg)
@@ -52,6 +57,7 @@ proc_data <- unique(normData[
 
 
 subsetted_samples <- unique(proc_data$CELL_LINE_NAME)
+
 info(paste0("Subsetting proc_data to only have n = ", length(subsetted_samples), " samples"))
 subset_procdata <- proc_data[CELL_LINE_NAME %in% subsetted_samples,]
 subset_procdata <- subset_procdata[order(CELL_LINE_NAME, DRUG_NAME, CONC)]
@@ -81,20 +87,12 @@ TREDataMapper <- CoreGx::TREDataMapper(rawdata=subset_procdata)
 
   info(paste0(capture.output(TREDataMapper), collapse = "\n"))
   # devtools::load_all("/home/bioinf/bhklab/jermiah/Bioconductor/CoreGx/")
-  devtools::install_github("bhklab/CoreGx", ref = "devel")
+  
   gdsc_tre <- CoreGx::metaConstruct(TREDataMapper)
   tre <- gdsc_tre
 }
 
 info(paste0(capture.output(tre), collapse = "\n"))
-published.profiles <- subset_fitted_data[
-  CELL_LINE_NAME %in% tre$raw$CELL_LINE_NAME & 
-    DRUG_NAME %in% tre$raw$DRUG_NAME,]
-
-info(paste0("Adding published profiles to tre"))
-assay(tre, "profiles.published") <- published.profiles
-info(paste0(capture.output(tre), collapse = "\n"))
-
 info("Endoaggregating tre with recomputed profiles")
 tre_fit <- tre |>
     endoaggregate(
@@ -123,6 +121,15 @@ tre_fit <- tre |>
         nthread=THREADS  # parallelize over multiple cores to speed up the computation
 )
 info(paste0(capture.output(tre_fit), collapse = "\n"))
+
+published.profiles <- subset_fitted_data[
+  CELL_LINE_NAME %in% tre$raw$CELL_LINE_NAME & 
+    DRUG_NAME %in% tre$raw$DRUG_NAME,]
+
+info(paste0("Adding published profiles to tre"))
+assay(tre_fit, "profiles.published") <- published.profiles
+info(paste0(capture.output(tre_fit), collapse = "\n"))
+
 
 
 info(paste0("Saving tre to: ", OUTPUT$tre))

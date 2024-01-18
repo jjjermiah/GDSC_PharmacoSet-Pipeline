@@ -58,7 +58,10 @@ rule build_treatmentResponseExperiment:
     conda:
         treatmentResponse_conda_env
     threads:
-        32
+        64
+    resources:
+        # 64GB of memory
+        mem_mb = 64000
     script:
         "../scripts/treatmentResponse/build_treatmentResponseExperiment.R"
 
@@ -68,7 +71,8 @@ rule build_all_treatmentResponseExperiment:
             "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment.qs",
             dataset =  ["GDSC1", "GDSC2"],
             # release = [8.5] # [8.2, 8.4, 8.5]
-            release = [8.2, 8.4, 8.5]
+            # release = [8.2, 8.4, 8.5]
+            release = [8.5]
         )
     output:
         tre = "results/data/treatmentResponse/all_treatmentResponseExperiment.qs"
