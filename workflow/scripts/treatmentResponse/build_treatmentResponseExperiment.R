@@ -14,7 +14,7 @@ suppressPackageStartupMessages(library(data.table, quietly = TRUE))
 suppressPackageStartupMessages(library(PharmacoGx))
 suppressPackageStartupMessages(library(GenomicRanges))
 
-suppressMessages(suppressWarnings(devtools::install_github("bhklab/CoreGx", quiet = TRUE)))
+devtools::install_github("bhklab/CoreGx", quiet = TRUE)
 
 # 0.1 Setup Logger
 # ----------------
@@ -56,7 +56,7 @@ proc_data <- unique(normData[
   .(CELL_LINE_NAME, DRUG_NAME, CONC, Viability = normalized_intensity)])
 
 
-subsetted_samples <- unique(proc_data$CELL_LINE_NAME)
+subsetted_samples <- unique(proc_data$CELL_LINE_NAME)[1:500]
 
 info(paste0("Subsetting proc_data to only have n = ", length(subsetted_samples), " samples"))
 subset_procdata <- proc_data[CELL_LINE_NAME %in% subsetted_samples,]
