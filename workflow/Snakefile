@@ -47,8 +47,6 @@ rule build_PharmacoSet:
     threads: 4
     conda:
         "envs/PharmacoSet.yaml"
-    threads:
-        4
     script:
         "scripts/pharmacoset/build_PharmacoSet.R"
 
