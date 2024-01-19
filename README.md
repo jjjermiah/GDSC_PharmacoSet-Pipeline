@@ -122,11 +122,9 @@ MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
 
 # READ IN ALL TRE
 ``` R
-list.files("/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/results/data/treatmentResponse")
-path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/results/data/treatmentResponse"
-list.files(path)
-paste0("/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/results/data/treatmentResponse/",list.files(path))
-files <- paste0("/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/results/data/treatmentResponse/",list.files(path))
+
+path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/orcestradata/GDSC/results/data/treatmentResponse/"
+files <- paste0(path,list.files(path))
 files
 tre_list <- lapply(files, qs::qread, nthreads =32)
 tre_list

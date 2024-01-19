@@ -2,9 +2,7 @@
 # CREATED: 01-08-2024
 # This script takes in the following files:
 #  - INPUT$metadata
-#  - INPUT$WES_genes
-#  - INPUT$WES_category
-#  - INPUT$WES_total_cnv
+#  - INPUT$WES_zipped
 # and outputs the following files:
 #  - OUTPUT$preprocessedCNV
 # 
@@ -36,17 +34,22 @@ if(exists("snakemake")){
     WILDCARDS <- snakemake@wildcards
     THREADS <- snakemake@threads
     LOGFILE <- snakemake@log[[1]]
-    # save.image()
+    save.image()
 }
 
 library(data.table)
 suppressPackageStartupMessages(library(GenomicRanges))
 
+
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode
 logger <- log4r::logger(
-    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+    appenders = list(
+      log4r::file_appender(LOGFILE, append = TRUE),
+      log4r::console_appender()
+    )
+)
 
 # make a function to easily log messages to the logger
 info <- function(msg) log4r::info(logger, msg)
@@ -58,7 +61,16 @@ metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
 sampleMetadata <- metadata$sample
 geneAnnot <- metadata$GRanges
 
-inputFilesNames <- names(INPUT)[names(INPUT) != "" & names(INPUT) != "metadata"]
+
+WES_CNV_dir <- paste0(dirname(INPUT$WES_zipped), "/WES_CNV")
+dir.create(WES_CNV_dir, recursive = TRUE, showWarnings = FALSE)
+info(paste0("Unzipping ", INPUT$WES_zipped, " into ", WES_CNV_dir))
+unzip(INPUT$WES_zipped, exdir = WES_CNV_dir)
+
+# list.files(WES_CNV_dir)
+
+
+inputFilesNames <- file.path(WES_CNV_dir, list.files(WES_CNV_dir))
 
 # 0.3 Read in the raw CNV data
 # -----------------------
@@ -68,10 +80,14 @@ inputFilesNames <- names(INPUT)[names(INPUT) != "" & names(INPUT) != "metadata"]
 # rawdata/cnv/WES_pureCN_CNV_genes_20221213.csv
 
 gene_files <- inputFilesNames[grepl("genes", inputFilesNames)]
+
+# Get the largest file in the list of gene_files
+gene_files <- gene_files[which.max(file.size(gene_files))]
+
 genes_dt <- lapply(gene_files, function(file){
-    info(paste("Loading", file, INPUT[[file]], " "))
+    info(paste("Loading", file," "))
     df <- data.table::fread(
-        INPUT[[file]], header = TRUE, showProgress = FALSE,
+        file, header = TRUE, showProgress = FALSE,
         sep = ",", stringsAsFactors = FALSE, nThread = THREADS)
     
     info(sprintf("Loaded %s with %d rows and %d columns", file, nrow(df), ncol(df)))
@@ -92,12 +108,12 @@ genes_dt <- lapply(gene_files, function(file){
 
     return(df)
 })
-names(genes_dt) <- gene_files
+names(genes_dt) <- basename(gene_files)
 
 
 # 1. Build data structures for each datatype:
 # -------------------------------------------
-wes_gene_dt <- genes_dt$WES_genes
+wes_gene_dt <- genes_dt[[1]]
 
 setnames(wes_gene_dt, "model_name", "sampleid")
 
@@ -122,7 +138,7 @@ assay_dt <- dt[source == source_, !c("source"), with = FALSE]
 # the `dcast` function to reshape the data from 
 # long to wide format, with genes as rows and samples as columns.
 # The resulting data frame `assay_dt.t` contains the `col` values 
-# for each gene-sample combination.
+# (i.e total_copy_number, cn_category, etc) for each gene-sample combination.
 # If the `col` values are of type character, the function `first` 
 # is used to aggregate the values, otherwise the mean is calculated.
 assayNames <- cols[!cols %in% c("sampleid", "symbol", "source")]
