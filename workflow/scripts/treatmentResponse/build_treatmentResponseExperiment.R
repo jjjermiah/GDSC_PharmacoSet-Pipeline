@@ -9,13 +9,13 @@ if(exists("snakemake")){
     LOGFILE <- snakemake@log[[1]]
     save.image()
 }
+pak::pkg_install("bhklab/CoreGx")
 
 suppressPackageStartupMessages(library(data.table, quietly = TRUE))
 suppressPackageStartupMessages(library(PharmacoGx))
 suppressPackageStartupMessages(library(GenomicRanges))
 
-devtools::install_github("bhklab/CoreGx", quiet = TRUE)
-
+# devtools::install_github("bhklab/CoreGx", quiet = TRUE)
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode
@@ -56,11 +56,12 @@ proc_data <- unique(normData[
   .(CELL_LINE_NAME, DRUG_NAME, CONC, Viability = normalized_intensity)])
 
 
-subsetted_samples <- unique(proc_data$CELL_LINE_NAME)[1:500]
+subsetted_samples <- unique(proc_data$CELL_LINE_NAME)
 
 info(paste0("Subsetting proc_data to only have n = ", length(subsetted_samples), " samples"))
 subset_procdata <- proc_data[CELL_LINE_NAME %in% subsetted_samples,]
 subset_procdata <- subset_procdata[order(CELL_LINE_NAME, DRUG_NAME, CONC)]
+
 
 subset_fitted_data <- unique(
   fitted_data[
@@ -92,48 +93,18 @@ TREDataMapper <- CoreGx::TREDataMapper(rawdata=subset_procdata)
   tre <- gdsc_tre
 }
 
-info(paste0(capture.output(tre), collapse = "\n"))
-info("Endoaggregating tre with recomputed profiles")
-tre_fit <- tre |>
-    endoaggregate(
-        {  # the entire code block is evaluated for each group in our group by
-            # 1. fit a log logistic curve over the dose range
-            fit <- PharmacoGx::logLogisticRegression(CONC, Viability,
-                viability_as_pct=FALSE)
-            # 2. compute curve summary metrics
-            ic50 <- PharmacoGx::computeIC50(CONC, Hill_fit=fit)
-            aac <- PharmacoGx::computeAUC(CONC, Hill_fit=fit)
-            # 3. assemble the results into a list, each item will become a
-            #   column in the target assay.
-            list(
-                HS=fit[["HS"]],
-                E_inf = fit[["E_inf"]],
-                EC50 = fit[["EC50"]],
-                Rsq=as.numeric(unlist(attributes(fit))),
-                aac_recomputed=aac,
-                ic50_recomputed=ic50
-            )
-        },
-        assay="raw",
-        target="profiles.recomputed",
-        enlist=FALSE,  # this option enables the use of a code block for aggregation
-        by=c("DRUG_NAME", "CELL_LINE_NAME"),
-        nthread=THREADS  # parallelize over multiple cores to speed up the computation
-)
-info(paste0(capture.output(tre_fit), collapse = "\n"))
 
-published.profiles <- subset_fitted_data[
+published_profiles <- subset_fitted_data[
   CELL_LINE_NAME %in% tre$raw$CELL_LINE_NAME & 
     DRUG_NAME %in% tre$raw$DRUG_NAME,]
 
 info(paste0("Adding published profiles to tre"))
-assay(tre_fit, "profiles.published") <- published.profiles
-info(paste0(capture.output(tre_fit), collapse = "\n"))
-
-
+assay(tre, "profiles_published") <- published_profiles
+info(paste0(capture.output(tre), collapse = "\n"))
 
 info(paste0("Saving tre to: ", OUTPUT$tre))
-qs::qsave(tre_fit, OUTPUT$tre, nthreads = THREADS)
+qs::qsave(tre, OUTPUT$tre, nthreads = THREADS)
+
 
 
 # tre_list <- lapply(unique(proc_data$CELL_LINE_NAME)[1:2], function(x){

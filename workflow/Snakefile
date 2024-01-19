@@ -10,6 +10,8 @@ HTTP = HTTPRemoteProvider()
 configfile: "workflow/config/config.yaml"
 molecularProfiles = config['molecularProfiles']
 
+dataset = "GDSC2"
+release = 8.5
 
 include: "rules/process_metadata.smk"
 include: "rules/process_microarray.smk"
