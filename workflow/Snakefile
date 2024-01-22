@@ -10,6 +10,8 @@ HTTP = HTTPRemoteProvider()
 configfile: "workflow/config/config.yaml"
 molecularProfiles = config['molecularProfiles']
 
+dataset = "GDSC2"
+release = 8.5
 
 include: "rules/process_metadata.smk"
 include: "rules/process_microarray.smk"
@@ -20,6 +22,14 @@ include: "rules/process_fusion.smk"
 include: "rules/process_methylation.smk"
 include: "rules/process_treatmentResponse.smk"
 
+rule build_ALL_PharmacoSets:
+    input:
+        PSETS = expand(
+            "results/data/{dataset}_{release}_PharmacoSet.qs",
+            dataset = ["GDSC1", "GDSC2"],
+            release = [8.2, 8.4, 8.5]
+        )
+
 rule build_PharmacoSet:
     input:
         metadata = rules.preprocess_METADATA.output.metadata,
@@ -28,15 +38,15 @@ rule build_PharmacoSet:
             rules.make_RNASEQ_SE.output.rnaseq_se,
             rules.make_FUSION_SE.output.fusion_se,
             rules.make_MUTATION_SE.output.mutation_se
-        ]
+        ],
+        tre = "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment_fit.qs",
     output:
-        pset = "results/data/PharmacoSet.qs"
+        pset = "results/data/{dataset}_{release}_PharmacoSet.qs"
     log:
-        "logs/build_PharmacoSet.log"
+        "logs/build_PharmacoSet_{dataset}_{release}.log"
+    threads: 4
     conda:
         "envs/PharmacoSet.yaml"
-    threads:
-        4
     script:
         "scripts/pharmacoset/build_PharmacoSet.R"
 

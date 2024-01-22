@@ -52,6 +52,13 @@ metadata <- qs::qread(INPUT$metadata, nthreads = THREADS)
 info(paste("Loading: ", INPUT$summarizedExperiments, sep = "\n\t"))
 se_list <- unlist(lapply(INPUT$summarizedExperiments, qs::qread, nthreads = THREADS))
 
+# 0.4 Read in treatmentResponseExperiment
+# ----------------------------------------
+info(paste("Loading: ", INPUT$tre, sep = "\n\t"))
+tre <- qs::qread(INPUT$tre, nthreads = THREADS)
+treatment <- metadata$treatment
+treatment <- treatment[(DRUG_NAME %in% rowData(tre)$DRUG_NAME) & !duplicated(treatment$DRUG_NAME), ]
+treatment <- data.frame(treatment, row.names = treatment$DRUG_NAME)
 
 # 1.0 Build MultiAssayExperiment
 # ------------------------------
@@ -115,52 +122,9 @@ mae <- MultiAssayExperiment::MultiAssayExperiment(
 )
 info(paste("MultiAssayExperiment:\n", capture.output(show(mae)), sep = ""))
 
-
-# make fake tre
-filePath <- system.file('extdata', 'merckLongTable.csv', package='CoreGx',
-  mustWork=TRUE)
-merckDT <- data.table::fread(filePath, na.strings=c('NULL'))
-
-# Our guesses of how we may identify rows, columns and assays
-groups <- list(
-  justDrugs=c('drug1id', 'drug2id'),
-  drugsAndDoses=c('drug1id', 'drug2id', 'drug1dose', 'drug2dose'),
-  justCells=c('cellid'),
-  cellsAndBatches=c('cellid', 'batchid'),
-  assays1=c('drug1id', 'drug2id', 'cellid'),
-  assays2=c('drug1id', 'drug2id', 'drug1dose', 'drug2dose', 'cellid', 'batchid')
-)
-
-# Decide if we want to subset out mapped columns after each group
-subsets <- c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE)
-
-# First we put our data in the `TRE`
-TREdataMapper <- CoreGx::TREDataMapper(rawdata=merckDT)
-
-# Then we can test our hypotheses, subset=FALSE means we don't remove mapped
-#   columns after each group is mapped
-guess <- CoreGx::guessMapping(TREdataMapper, groups=groups, subset=subsets)
-
-CoreGx::rowDataMap(TREdataMapper) <- guess$drugsAndDose
-CoreGx::colDataMap(TREdataMapper) <- guess$justCells
-
-CoreGx::assayMap(TREdataMapper) <- list(
-  sensitivity=list(
-    guess$assays2[[1]],
-    guess$assays2[[2]][seq_len(4)]
-  ),
-  profiles=list(
-    guess$assays2[[1]],
-    guess$assays2[[2]][c(5, 6)]
-  )
-)
-
-tre <- CoreGx::metaConstruct(TREdataMapper)
-
-
 pset <- PharmacoGx::PharmacoSet2(
     name = "GDSC",
-    treatment = data.frame(),
+    treatment = treatment,
     sample = sample,
     molecularProfiles = mae,
     treatmentResponse = tre,

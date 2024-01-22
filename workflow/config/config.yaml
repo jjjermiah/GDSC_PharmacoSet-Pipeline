@@ -86,8 +86,38 @@ molecularProfiles:
 
 
 treatmentResponse:
+  8.2:
+    date: "25Feb20"
+    metadata: 
+      sampleMetadata: 
+        description:
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/Cell_Lines_Details.xlsx"
+      treatmentMetadata:
+        description:
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/screened_compunds_rel_8.2.csv"
+    GDSC1:
+      rawdata:
+        description: "The raw data for the GDSC1 release 8.2 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/GDSC1_public_raw_data_25Feb20.csv"
+      processed:
+        description: "The processed data for the GDSC1 release 8.2 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/GDSC1_fitted_dose_response_25Feb20.xlsx"
+    GDSC2:
+      rawdata:
+        description: "The raw data for the GDSC2 release 8.2 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/GDSC2_public_raw_data_25Feb20.csv"
+      processed:
+        description: "The processed data for the GDSC2 release 8.2 is available from the GDSC website."
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/GDSC2_fitted_dose_response_25Feb20.xlsx"
   8.4:
     date: "24Jul22"
+    metadata:
+      sampleMetadata: 
+        description:
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/Cell_Lines_Details.xlsx"
+      treatmentMetadata:
+        description:
+        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/screened_compounds_rel_8.4.csv"
     GDSC1:
       rawdata:
         description: "The raw data for the GDSC1 release 8.4 is available from the GDSC website."
@@ -104,6 +134,13 @@ treatmentResponse:
         url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.4/GDSC2_fitted_dose_response_24Jul22.xlsx"
   8.5: 
     date: "27Oct23"
+    metadata:
+      sampleMetadata: 
+        description:
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/Cell_Lines_Details.xlsx"
+      treatmentMetadata:
+        description:
+        url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/screened_compounds_rel_8.5.csv"
     GDSC1:
       rawdata:
         description: "The raw data for the GDSC1 release 8.5 is available from the GDSC website."

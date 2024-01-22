@@ -10,12 +10,13 @@
 - TODO:: annotate treatments and samples
 - TODO:: annotate metadata for each `Experiment` object using config details
 - TODO:: molecularProfiles Create SummarizedExperiments
-  - rnaseq : createSummarizeExperiment DONE
-  - cnv : createSummarizeExperiment DONE
-      - Need to unzip rawdata within preprocessing instead
-  - fusion : need pre-processing
-  - mutation : pre-processing DONE
- - microarray : need pre-processing
+  - rnaseq : DONE
+  - cnv : 
+    - Need to break up each assay into its own SummarizedExperiment
+  - fusion : DONE
+  - mutation : DONE
+  - microarray : *need pre-processing*
+ - SUMMARIZEDEXPERIMENTS NEED $annotation slot filled for PharmacoGx::summarizeMolecularProfiles
 - TODO:: create conda environments + docker images for each rule and use them in the pipeline
   
 # Molecular Profiles
@@ -115,5 +116,17 @@ workflow/
 rowRanges(mae@ExperimentList[[1]]) -> mae_rows
 mae[rowRanges(mae@ExperimentList[[1]]),] -> r
 MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
+
+```
+
+
+# READ IN ALL TRE
+``` R
+
+path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/orcestradata/GDSC/results/data/treatmentResponse/"
+files <- paste0(path,list.files(path))
+files
+tre_list <- lapply(files, qs::qread, nthreads =32)
+tre_list
 
 ```
