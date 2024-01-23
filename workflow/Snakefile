@@ -30,6 +30,14 @@ rule build_ALL_PharmacoSets:
             release = [8.2, 8.4, 8.5]
         )
 
+rule build_ONE_PharmacoSets:
+    input:
+        PSETS = expand(
+            "results/data/{dataset}_{release}_PharmacoSet.qs",
+            dataset = ["GDSC2"],
+            release = [8.5]
+        )
+
 rule build_PharmacoSet:
     input:
         metadata = rules.preprocess_METADATA.output.metadata,

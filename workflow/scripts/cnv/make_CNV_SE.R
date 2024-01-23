@@ -26,57 +26,75 @@ if(exists("snakemake")){
 
 library(data.table)
 suppressPackageStartupMessages(library(GenomicRanges))
+
 # 0.1 Setup Logger
 # ----------------
 # create a logger from the LOGFILE path in append mode
 logger <- log4r::logger(
-    appenders = list(log4r::file_appender(LOGFILE, append = TRUE)))
+    appenders = list(
+      log4r::file_appender(LOGFILE, append = TRUE),
+      log4r::console_appender()
+    )
+)
+
 
 # make a function to easily log messages to the logger
-info <- function(msg) log4r::info(logger, msg)
+info <- function(...) log4r::info(logger, paste0(..., collapse = " "))
+
 info("Starting make_CNV_SE.R\n")
 
 # 0.2 Read in the input files
 # ---------------------------
-info(paste("Loading", INPUT$preprocessedCNV, " "))
+info("Loading ", INPUT$preprocessedCNV, " ")
 preproc <- qs::qread(INPUT$preprocessedCNV, nthreads = THREADS)
 
 assays_ <- preproc$assays
 rowRanges_ <- preproc$GRanges
 metadata_ <- preproc$metadata
 
-info(paste(
-    "Matrices:", 
-    capture.output(str(assays_)),
-    collapse = "\n"))
+# Append to metadata as much information as possible 
+metadata_$annotation <- "cnv"
+metadata_$date_created <- Sys.time()
+metadata_$sessionInfo <- capture.output(sessionInfo())
+
+info("Matrices:\n", paste(capture.output(str(assays_)), collapse = "\n"))
 
 
-sampleids <- unique(unlist(lapply(assays_, colnames)))
-geneids <- unique(unlist(lapply(assays_, rownames)))
+# This code block creates a list of SummarizedExperiment objects, 
+# one for each assay in the 'assays_' object.
+# Iterate over each assay in the 'assays_' object
+rse_list <- lapply(names(assays_), function(assay_name){
+    # Get the assay data for the current assay
+    assay <- assays_[[assay_name]]
+    
+    # Get the sample IDs and gene IDs for the assay
+    sampleids <- colnames(assay)
+    geneids <- rownames(assay)
+    # Create the colData data frame, which contains information about each sample
+    colData <- data.frame(
+        sampleid = sampleids,
+        batchid = rep(NA, length(sampleids)),
+        row.names = sampleids
+    )
 
-info(sprintf(
-    "\nTotal number of samples: %d\nTotal number of genes: %d", 
-    length(sampleids), length(geneids)))
+    rowRanges <- rowRanges_[rowRanges_$symbol %in% geneids,]
+    # Create a SummarizedExperiment object for the current assay
+    SummarizedExperiment::SummarizedExperiment(
+        assays = list(exprs = assays_[[assay_name]]),
+        rowRanges = rowRanges,
+        colData = colData,
+        metadata = metadata_
+    )
+})
 
-colData <- data.frame(
-      sampleid = sampleids,
-      batchid = rep(NA, length(sampleids))
+# Assign names to the rse_list based on the assay names
+names(rse_list) <- names(assays_)
+
+rse_list <- list(
+    "cnv" = rse_list
 )
 
-rowRanges <- rowRanges_[rowRanges_$symbol %in% geneids,]
-
-# rowRanges <- rowRanges[!duplicated(rowRanges$symbol),]
-
-rse <- SummarizedExperiment::SummarizedExperiment(
-    assays = assays_,
-    rowRanges = rowRanges,
-    colData = colData,
-    metadata = metadata_
-)
-rse <- list(
-    "cnv" = rse
-)
-info(paste("SummarizedExperiment:", capture.output(rse),collapse = "\n"))
+info("SummarizedExperiment:\n", paste(capture.output(rse_list),collapse = "\n"))
 
 dir.create(dirname(OUTPUT$CNV_se), recursive = TRUE, showWarnings = FALSE)
-qs::qsave(rse, file = OUTPUT$CNV_se)
+qs::qsave(rse_list, file = OUTPUT$CNV_se)

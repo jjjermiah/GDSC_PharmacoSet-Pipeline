@@ -14,9 +14,6 @@ referenceGenome:
   Gencode:
     build: "GRCh38"
     version: "44"
-  # description: TODO::(add description)
-  # url: "https://ftp.sanger.ac.uk/pub/CGP/gff/Homo_sapiens.GRCh37.NCBI.allchr_MT.fa.gz"
-
 
 molecularProfiles:
   microarray:
@@ -155,3 +152,4 @@ treatmentResponse:
       processed:
         description: "The processed data for the GDSC2 release 8.5 is available from the GDSC website."
         url: "https://cog.sanger.ac.uk/cancerrxgene/GDSC_release8.5/GDSC2_fitted_dose_response_27Oct23.xlsx"
+

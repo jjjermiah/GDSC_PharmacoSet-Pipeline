@@ -2,8 +2,6 @@
 treatmentResponse = config["treatmentResponse"]
 treatmentResponse_conda_env = "../envs/treatmentResponse.yaml"
 
-
-
 # This function is a Input Function (snakemake feature) that uses the wildcards
 # to get the URLs of treatmentResponse data based on the config file 
 # (config["treatmentResponse"])
@@ -63,8 +61,8 @@ rule build_treatmentResponseExperiment:
 
 rule fit_treatmentResponseExperiment:
     input:
-        # preprocessed = "procdata/treatmentResponse/{dataset}_{release}_treatmentResponse_preprocessed.qs",
-        tre = rules.build_treatmentResponseExperiment.output.tre
+        preprocessed = "procdata/treatmentResponse/{dataset}_{release}_treatmentResponse_preprocessed.qs",
+        tre = "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment.qs"
     output:
         tre = "results/data/treatmentResponse/{dataset}_{release}_treatmentResponseExperiment_fit.qs"
     conda:

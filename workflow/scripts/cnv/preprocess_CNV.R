@@ -166,7 +166,7 @@ matrices <- BiocParallel::bplapply(
     BPPARAM = BiocParallel::MulticoreParam(
         workers = THREADS, timeout=3600)
 )
-names(matrices) <- paste0("Sanger.", assayNames)
+names(matrices) <- paste0(assayNames, ".sanger")
 
 # Each matrix should have the same number of rows and columns
 # check that the number of rows and columns are the same for each matrix
@@ -180,7 +180,7 @@ if(all.equal(lengths(lapply(matrices, nrow)),lengths(lapply(matrices, ncol)))){
 
 metadata <- list(
     data_source = snakemake@config$molecularProfiles$cnv,
-    filename = INPUT[[gene_files]])
+    filename = basename(gene_files))
 
 # 3. Save Output
 # --------------

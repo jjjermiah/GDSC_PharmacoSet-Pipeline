@@ -126,7 +126,7 @@ MultiAssayExperiment::subsetByRow(r, r_, maxgap = 2L, type = "within")
 path <- "/home/bioinf/bhklab/jermiah/psets/PharmacoSet-Pipelines/GDSC/orcestradata/GDSC/results/data/treatmentResponse/"
 files <- paste0(path,list.files(path))
 files
-tre_list <- lapply(files, qs::qread, nthreads =32)
-tre_list
+list <- lapply(files, qs::qread, nthreads =32)
+list
 
 ```
