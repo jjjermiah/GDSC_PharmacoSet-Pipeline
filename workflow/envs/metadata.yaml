@@ -8,5 +8,6 @@ dependencies:
   - r-qs=0.25
   - r-log4r=0.4.3
   - r-readxl=1.4.2
+  - r-biocmanager=1.30.22
   - bioconductor-genomicranges=1.54.1
   - bioconductor-rtracklayer=1.62.0

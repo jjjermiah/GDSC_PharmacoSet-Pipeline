@@ -85,13 +85,7 @@ molecularProfiles:
 treatmentResponse:
   8.2:
     date: "25Feb20"
-    metadata: 
-      sampleMetadata: 
-        description:
-        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/Cell_Lines_Details.xlsx"
-      treatmentMetadata:
-        description:
-        url: "https://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-8.2/screened_compunds_rel_8.2.csv"
+
     GDSC1:
       rawdata:
         description: "The raw data for the GDSC1 release 8.2 is available from the GDSC website."
